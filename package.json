@@ -1,0 +1,21 @@
+{
+  "name": "hackathon-voting-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hackathon team voting app — teams distribute points across other teams' presentations.",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:reset": "node -e \"const fs=require('fs');const p='server/data';if(fs.existsSync(p)){fs.rmSync(p,{recursive:true,force:true});console.log('cleared',p)}else{console.log(p,'already empty')}\"",
+    "build": "npm --prefix client run build && npm --prefix server run build",
+    "start": "node server/dist/index.js",
+    "test:server": "npm --prefix server run test",
+    "test:client": "npm --prefix client run test:unit",
+    "test:e2e": "npm run build && playwright test",
+    "test": "npm run test:server && npm run test:client && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "concurrently": "^9.0.1"
+  }
+}

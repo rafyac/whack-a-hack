@@ -1,0 +1,36 @@
+# Product Requirements Document
+
+## Purpose
+Whack-A-Hack is a hackathon voting app where an admin runs multiple independent voting sessions. Each session contains its own teams, optional commissioner, vote budget, and results.
+
+## Users
+- **Admin**: creates sessions, manages teams, opens/closes voting, monitors live results.
+- **Team voter**: logs into one session and distributes a fixed points budget across other teams.
+- **Commissioner**: optional special voter with a separate budget; can vote for teams but is never a vote target.
+- **Public viewer**: sees final results only after a session is closed.
+
+## Current product scope
+1. **Multi-session isolation**
+   - Sessions are independent and move through `setup -> open -> closed`.
+   - Teams, commissioner entry, ballots, and results are all session-scoped.
+2. **Hack/team management**
+   - Admin can add, edit, and delete teams within a session.
+   - Passwords can be generated or entered manually and later edited by admin.
+3. **Voting**
+   - Team login requires session, team name, and password.
+   - Teams must allocate exactly `pointsPerTeam`.
+   - Self-voting is blocked.
+   - Commissioner voting uses `judgePoints`.
+4. **Results**
+   - Admin can watch live totals during an event.
+   - Public leaderboard is available only when a session is closed.
+5. **Operations**
+   - App runs locally in native dev mode or as a single container with persisted SQLite storage.
+   - Native local dev requires `ADMIN_CODE` to be supplied in `server/.env` before startup.
+   - Containerized deployments must inject `ADMIN_CODE` and `COOKIE_SECRET`; there is no built-in admin fallback for deployed runtimes.
+
+## Success criteria
+- Admin can run multiple hackathon sessions without cross-session leakage.
+- Commissioner participation changes totals without appearing as a ranked hack.
+- Local and container deployments preserve state across restarts when configured with persistent storage.
+- Existing API and browser tests cover the main session, voting, and results flows.

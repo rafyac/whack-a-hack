@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    @apply font-sans text-white antialiased;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.24), transparent 28%),
+      radial-gradient(circle at 82% 14%, rgba(168, 85, 247, 0.22), transparent 34%),
+      radial-gradient(circle at 58% 82%, rgba(244, 114, 182, 0.18), transparent 30%),
+      linear-gradient(145deg, #060816 0%, #0b1021 42%, #121938 100%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-display font-bold text-slate-900
+           bg-white shadow-[0_20px_50px_-28px_rgba(255,255,255,0.95)]
+            hover:scale-[1.02] hover:bg-slate-50 active:scale-[0.98] transition-transform
+            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-2.5 font-semibold text-white/80
+           border border-white/15 bg-white/[0.06] hover:bg-white/[0.1] hover:text-white transition;
+  }
+  .neon-card {
+    @apply rounded-[2rem] border border-white/15 bg-white/[0.075] p-6 backdrop-blur-2xl
+           shadow-[0_24px_80px_-40px_rgba(15,23,42,0.95)];
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/15 bg-white/[0.08] px-4 py-3
+           text-white placeholder:text-white/40 outline-none transition
+           focus:border-white/35 focus:bg-white/[0.12]
+           focus:shadow-[0_0_0_4px_rgba(255,255,255,0.08)];
+  }
+  select.input {
+    color-scheme: light;
+    background-color: rgba(255, 255, 255, 0.96);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #111827;
+    box-shadow: 0 10px 30px -20px rgba(15, 23, 42, 0.95);
+  }
+  select.input option {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold tracking-wide;
+  }
+  .section-kicker {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05]
+           px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white/60;
+  }
+  .section-copy {
+    @apply leading-7 text-white/60;
+  }
+  .subtle-card {
+    @apply rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4
+           shadow-[0_20px_60px_-44px_rgba(15,23,42,0.95)];
+  }
+  .feedback-banner {
+    @apply rounded-[1.5rem] border px-4 py-3 text-sm shadow-[0_16px_45px_-34px_rgba(15,23,42,0.95)];
+  }
+  .feedback-info {
+    @apply border-white/10 bg-white/[0.05] text-white/75;
+  }
+  .feedback-success {
+    @apply border-carnival-lime/35 bg-carnival-lime/10 text-carnival-lime;
+  }
+  .feedback-warning {
+    @apply border-carnival-yellow/35 bg-carnival-yellow/10 text-carnival-yellow;
+  }
+  .feedback-error {
+    @apply border-carnival-pink/30 bg-carnival-pink/10 text-carnival-pink;
+  }
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.07]
+           text-white transition hover:bg-white/[0.12]
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white/[0.07];
+  }
+}

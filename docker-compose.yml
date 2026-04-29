@@ -1,0 +1,30 @@
+# Build the production image and run it locally with persistent SQLite data.
+# Mirrors the single-container production runtime (/data volume).
+#
+# Before running, create a repo-root `.env` file (used by Docker Compose) with:
+#   ADMIN_CODE=choose-a-local-admin-code
+#   COOKIE_SECRET=choose-a-long-random-cookie-secret
+#
+# Then run:
+#   docker compose up --build
+#
+# Then open http://localhost:8080 and sign in with the ADMIN_CODE you supplied.
+# SQLite database persists in ./.localdata between runs.
+
+services:
+  voting:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: whack-a-hack:local
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      DATA_DIR: /data
+      ADMIN_CODE: "${ADMIN_CODE:?Create a repo-root .env with ADMIN_CODE before running docker compose}"
+      COOKIE_SECRET: "${COOKIE_SECRET:?Create a repo-root .env with COOKIE_SECRET before running docker compose}"
+    volumes:
+      - ./.localdata:/data
+    restart: unless-stopped
