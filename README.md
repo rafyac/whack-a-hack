@@ -88,6 +88,41 @@ docker run -d --name whack-a-hack -p 8080:8080 -e ADMIN_CODE=change-me -e COOKIE
 
 If you prefer, `docker-compose.yml` is already set up as the simplest starting point for local or small self-hosted installs, but it expects `ADMIN_CODE` and `COOKIE_SECRET` to be supplied by the caller.
 
+### Azure Container Apps via Bicep
+
+The repo now includes **generic Azure Bicep** under `infra/` for deploying the same single-container app to **Azure Container Apps** with:
+
+- external ingress on port `8080`
+- Azure Files mounted at `/data` for SQLite persistence
+- secure deployment parameters for `ADMIN_CODE` and `COOKIE_SECRET`
+- no baked-in subscription IDs, resource group names, or personal Azure details
+
+Suggested flow:
+
+1. Build and publish your image to a registry you control.
+2. Create or choose a resource group in the Azure subscription you want to use.
+3. Review `infra/main.parameters.example.json` and adjust the non-secret values.
+4. Deploy the stack with your own secure values:
+
+```bash
+az group create --name <resource-group> --location <azure-region>
+az deployment group create \
+  --resource-group <resource-group> \
+  --template-file infra/main.bicep \
+  --parameters @infra/main.parameters.example.json \
+  --parameters containerImage=<registry>/<image>:<tag> \
+               adminCode=<your-admin-code> \
+               cookieSecret=<long-random-secret>
+```
+
+If you use a **private** registry, also pass:
+
+```bash
+--parameters registryServer=<registry-server> \
+             registryUsername=<registry-username> \
+             registryPassword=<registry-password-or-token>
+```
+
 ### Operational notes
 
 - Keep `/data` on persistent storage so `voting.db` survives restarts and redeploys.
@@ -95,7 +130,7 @@ If you prefer, `docker-compose.yml` is already set up as the simplest starting p
 - Put the container behind your normal TLS/reverse-proxy setup if exposing it publicly.
 - Back up the mounted data volume as part of normal operations.
 
-> Cloud-specific provisioning is intentionally not checked into this repo; deploy the container with your platform's own tooling.
+> The checked-in Azure files are intentionally generic. The deployer supplies subscription, resource group, image reference, and secret values at deployment time.
 
 ## Verification
 

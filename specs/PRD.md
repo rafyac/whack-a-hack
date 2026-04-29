@@ -25,9 +25,10 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
    - Admin can watch live totals during an event.
    - Public leaderboard is available only when a session is closed.
 5. **Operations**
-   - App runs locally in native dev mode or as a single container with persisted SQLite storage.
-   - Native local dev requires `ADMIN_CODE` to be supplied in `server/.env` before startup.
-   - Containerized deployments must inject `ADMIN_CODE` and `COOKIE_SECRET`; there is no built-in admin fallback for deployed runtimes.
+    - App runs locally in native dev mode or as a single container with persisted SQLite storage.
+    - Native local dev requires `ADMIN_CODE` to be supplied in `server/.env` before startup.
+    - Containerized deployments must inject `ADMIN_CODE` and `COOKIE_SECRET`; there is no built-in admin fallback for deployed runtimes.
+    - Optional Azure Container Apps deployment artifacts may be checked into `infra/`, but must stay generic so deployers provide their own Azure context, image reference, and secrets.
 
 ## Success criteria
 - Admin can run multiple hackathon sessions without cross-session leakage.

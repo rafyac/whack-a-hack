@@ -50,7 +50,8 @@ Important implemented rules:
 ### Production/container target
 - One Node-based container builds the SPA, serves the API, and stores SQLite on mounted persistent storage.
 - Deployments must inject `ADMIN_CODE` and `COOKIE_SECRET`; no admin-code fallback is baked into the server.
-- The repo does not include cloud-specific IaC; any deployment target should mount persistent storage at `/data` if session data must survive restarts or replacements.
+- The repo includes optional **Azure Container Apps Bicep** under `infra/` for deployers who want Azure-hosted demos without committing subscription-specific values.
+- Any deployment target should mount persistent storage at `/data` if session data must survive restarts or replacements.
 
 ## Testing architecture
 - **Server tests**: `node:test` + `supertest` validate API contracts and business rules against a reset test database.

@@ -15,7 +15,7 @@
 - Admin can create participants with:
   - name
   - password
-  - kind (`team` or `judge`)
+  - kind (`team` or internal `judge` value for the commissioner role)
 - Admin can edit names and passwords after creation.
 - Commissioner is excluded from vote targets and public rankings.
 
@@ -46,6 +46,7 @@
 - **Native local dev**: client and server run separately; SQLite lives under `server\data`, and developers provide `ADMIN_CODE` via `server/.env` before `npm run dev`.
 - **Local container parity**: `docker compose` runs the production image with persisted data in `.localdata`, using caller-supplied `ADMIN_CODE` and `COOKIE_SECRET`.
 - **Cloud target**: single container deployment with mounted persistent storage for SQLite and environment-managed `ADMIN_CODE`/`COOKIE_SECRET`.
+- **Azure option**: parameterized Bicep in `infra/` can deploy the app to Azure Container Apps using a caller-supplied image reference, secure secrets, and Azure Files mounted at `/data`.
 
 ## Test strategy
 - Server coverage is API-level integration testing with `node:test` and `supertest`.
