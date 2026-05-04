@@ -139,3 +139,32 @@ Run the existing test suite with:
 ```bash
 npm test
 ```
+
+Validate the production container build with:
+
+```bash
+docker build -t whack-a-hack .
+```
+
+## Open-source repo basics
+
+- **License:** [MIT](LICENSE)
+- **Contributing guide:** [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Code of conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+
+### Contribution flow
+
+1. Open an issue or describe the change in your PR.
+2. Fork the repo and create a focused branch.
+3. Make the change, update docs/specs when behavior changes, and run the local checks.
+4. Open a pull request for review.
+
+### GitHub Actions
+
+The repo includes a GitHub Actions workflow that:
+
+- runs `npm test` on pull requests and on `main`
+- validates the production container build with `docker build`
+- publishes `ghcr.io/rafyac/whack-a-hack:latest` and a commit SHA tag when changes land on `main`
+
+Pull requests only validate the image build. The publish step is reserved for trusted pushes to `main`.

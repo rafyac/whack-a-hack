@@ -1,43 +1,10 @@
+import './env.js';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-
-// ---- tiny .env loader (no extra dependency) ----
-// Reads server/.env if present and fills any *unset* env vars. Only used in
-// dev — production sets env via the platform.
-(function loadDotEnv() {
-  const candidates = [
-    path.resolve(process.cwd(), '.env'),
-    path.resolve(process.cwd(), 'server/.env'),
-  ];
-  for (const p of candidates) {
-    if (!fs.existsSync(p)) continue;
-    try {
-      const text = fs.readFileSync(p, 'utf8');
-      for (const raw of text.split(/\r?\n/)) {
-        const line = raw.trim();
-        if (!line || line.startsWith('#')) continue;
-        const eq = line.indexOf('=');
-        if (eq < 0) continue;
-        const k = line.slice(0, eq).trim();
-        let v = line.slice(eq + 1).trim();
-        if (
-          (v.startsWith('"') && v.endsWith('"')) ||
-          (v.startsWith("'") && v.endsWith("'"))
-        ) {
-          v = v.slice(1, -1);
-        }
-        if (process.env[k] === undefined) process.env[k] = v;
-      }
-      break;
-    } catch {
-      /* ignore */
-    }
-  }
-})();
 
 import { api } from './routes.js';
 

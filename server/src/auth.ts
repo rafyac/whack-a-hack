@@ -1,3 +1,4 @@
+import './env.js';
 import crypto from 'node:crypto';
 
 const COOKIE_SECRET =

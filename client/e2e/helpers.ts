@@ -36,6 +36,11 @@ export async function adminLogin(page: Page) {
   await expect(page.getByRole('button', { name: 'Sessions' })).toBeVisible();
 }
 
+export async function adminLogout(page: Page) {
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await expect(page.getByRole('heading', { name: 'Admin login' })).toBeVisible();
+}
+
 export async function createSession(
   page: Page,
   {
