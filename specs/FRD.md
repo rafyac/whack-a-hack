@@ -44,15 +44,15 @@
 - Changing a session budget invalidates prior votes for that session so new ballots match the new budget.
 
 ## Deployment and persistence
-- **Native local dev**: client and server run separately; SQLite lives under `server\data`, and developers provide `ADMIN_CODE` via `server/.env` before `npm run dev`.
-- **Local container parity**: `docker compose` runs the production image with persisted data in `.localdata`, using caller-supplied `ADMIN_CODE` and `COOKIE_SECRET`.
-- **Cloud target**: single container deployment with mounted persistent storage for SQLite and environment-managed `ADMIN_CODE`/`COOKIE_SECRET`.
-- **Azure option**: parameterized Bicep in `infra/` can deploy the app to Azure Container Apps using a caller-supplied image reference, secure secrets, and Azure Files mounted at `/data`.
+- **Native local dev**: client and server run separately against a local PostgreSQL instance, and developers provide `ADMIN_CODE`, `COOKIE_SECRET`, `DATABASE_URL`, and optional `DATABASE_SSL_MODE` via `server/.env` before `npm run dev`.
+- **Local container parity**: `docker compose` runs the production image plus a PostgreSQL container, using caller-supplied `ADMIN_CODE`, `COOKIE_SECRET`, and `POSTGRES_PASSWORD`.
+- **Cloud target**: single app container deployment with an external PostgreSQL database and environment-managed `ADMIN_CODE`/`COOKIE_SECRET`/`DATABASE_URL`.
+- **Azure option**: parameterized Bicep in `infra/` can deploy the app to Azure Container Apps plus Azure Database for PostgreSQL Flexible Server using a caller-supplied image reference and secure parameters.
 
 ## Test strategy
 - Server coverage is API-level integration testing with `node:test` and `supertest`.
 - Client coverage includes focused unit tests with `vitest` for session-selection logic.
-- Browser coverage is Playwright end-to-end testing against the built app.
+- Browser coverage is Playwright end-to-end testing against the built app with a PostgreSQL-backed test database.
 - Current test focus is critical flow coverage:
   - session setup and visibility
   - team/commissioner authentication

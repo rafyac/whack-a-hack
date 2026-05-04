@@ -3,13 +3,13 @@
 ## System shape
 - **Client**: React + Vite SPA for login, voting, results, and admin workflows.
 - **Server**: Express API handling auth, session management, vote validation, results, and static asset hosting.
-- **Data store**: SQLite database accessed directly from the Node server.
+- **Data store**: PostgreSQL accessed directly from the Node server.
 
 ## Core runtime model
 1. Admin signs in with an admin cookie session.
 2. Admin configures a voting session and adds teams plus an optional commissioner.
 3. Teams/commissioner sign in with session-specific credentials.
-4. Ballots are validated server-side and stored in SQLite.
+4. Ballots are validated server-side and stored in PostgreSQL.
 5. Admin can inspect live results; public results unlock only after close.
 
 ## Data model
@@ -39,19 +39,19 @@ Important implemented rules:
 - `npm run dev` starts:
   - Vite client on `:5173`
   - Express server on `:8080`
-- SQLite persists in `server\data\voting.db`.
+- PostgreSQL runs separately and the server connects via `DATABASE_URL`.
 
 ### Local container parity
-- `docker compose up --build` runs one container exposing `:8080`.
-- `DATA_DIR=/data` stores SQLite on a bind-mounted `.localdata` folder.
-- The caller provides `ADMIN_CODE` and `COOKIE_SECRET` (for example via a repo-root `.env` file consumed by Docker Compose).
-- This matches the single-container production shape closely.
+- `docker compose up --build` runs the app container plus a PostgreSQL container.
+- The caller provides `ADMIN_CODE`, `COOKIE_SECRET`, and `POSTGRES_PASSWORD` (for example via a repo-root `.env` file consumed by Docker Compose).
+- The app still runs as one web container; PostgreSQL provides durable state across restarts.
 
 ### Production/container target
-- One Node-based container builds the SPA, serves the API, and stores SQLite on mounted persistent storage.
-- Deployments must inject `ADMIN_CODE` and `COOKIE_SECRET`; no admin-code fallback is baked into the server.
+- One Node-based container builds the SPA and serves the API.
+- Deployments must inject `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL`; no admin-code fallback is baked into the server.
+- Durable state lives in PostgreSQL rather than a mounted application volume.
 - The repo includes optional **Azure Container Apps Bicep** under `infra/` for deployers who want Azure-hosted demos without committing subscription-specific values.
-- Any deployment target should mount persistent storage at `/data` if session data must survive restarts or replacements.
+- The checked-in Azure option provisions Azure Database for PostgreSQL Flexible Server and wires the connection string into Container Apps as a secret.
 
 ## Testing architecture
 - **Server tests**: `node:test` + `supertest` validate API contracts and business rules against a reset test database.

@@ -8,8 +8,11 @@
     "containerImage": {
       "value": "ghcr.io/your-org/whack-a-hack:latest"
     },
-    "fileShareName": {
-      "value": "sqlite"
+    "postgresAdminLogin": {
+      "value": "pgadmin"
+    },
+    "databaseName": {
+      "value": "whack_a_hack"
     },
     "containerCpu": {
       "value": "0.5"

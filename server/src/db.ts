@@ -1,86 +1,126 @@
 import './env.js';
-import Database from 'better-sqlite3';
-import path from 'node:path';
-import fs from 'node:fs';
+import pg from 'pg';
 
-const DATA_DIR = process.env.DATA_DIR || path.resolve(process.cwd(), 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const { Pool, types } = pg;
+type QueryResultRow = pg.QueryResultRow;
 
-const dbPath = path.join(DATA_DIR, 'voting.db');
-export const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+types.setTypeParser(20, (value) => Number(value));
 
-const SCHEMA_VERSION = 2;
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS schema_version (
-    version INTEGER PRIMARY KEY
-  );
-`);
-
-const verRow = db
-  .prepare('SELECT version FROM schema_version LIMIT 1')
-  .get() as { version: number } | undefined;
-
-const oldEventTable = db
-  .prepare(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='event'"
-  )
-  .get() as { name: string } | undefined;
-
-if (!verRow || verRow.version < SCHEMA_VERSION) {
-  // One-shot bootstrap to v2: drop legacy single-event schema if present.
-  // (No data migration — explicit project decision.)
-  db.exec(`
-    DROP TABLE IF EXISTS votes;
-    DROP TABLE IF EXISTS teams;
-    DROP TABLE IF EXISTS event;
-  `);
-  if (oldEventTable) {
-    console.warn(
-      '[db] Detected legacy v1 schema (event/teams/votes); dropped for fresh v2 start.'
-    );
-  }
-  db.prepare('DELETE FROM schema_version').run();
-  db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(
-    SCHEMA_VERSION
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL env var is required. Set it in local .env files and deployment secrets before starting the server.'
   );
 }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    status TEXT NOT NULL CHECK (status IN ('setup','open','closed')) DEFAULT 'setup',
-    points_per_team INTEGER NOT NULL DEFAULT 10,
-    judge_points INTEGER NOT NULL DEFAULT 30,
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-    updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+const DATABASE_SSL_MODE = (process.env.DATABASE_SSL_MODE || 'disable').toLowerCase();
+
+function createSslConfig() {
+  if (DATABASE_SSL_MODE === 'disable') return false;
+  return { rejectUnauthorized: false };
+}
+
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: createSslConfig(),
+  max: 10,
+});
+
+function normalizeSql(sql: string) {
+  let index = 0;
+  return sql.replace(/\?/g, () => `$${++index}`);
+}
+
+type Queryable = pg.Pool | pg.PoolClient;
+
+function createFacade(client: Queryable) {
+  return {
+    async query<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+      return client.query<T>(normalizeSql(sql), params);
+    },
+    async maybeOne<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+      const result = await client.query<T>(normalizeSql(sql), params);
+      return (result.rows[0] as T | undefined) ?? null;
+    },
+    async one<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+      const result = await client.query<T>(normalizeSql(sql), params);
+      if (!result.rows[0]) {
+        throw new Error('expected one row but found none');
+      }
+      return result.rows[0] as T;
+    },
+    async many<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+      const result = await client.query<T>(normalizeSql(sql), params);
+      return result.rows as T[];
+    },
+  };
+}
+
+async function exec(sql: string) {
+  await pool.query(sql);
+}
+
+const SCHEMA_VERSION = 1;
+
+async function initDb() {
+  await exec(`
+    CREATE TABLE IF NOT EXISTS schema_version (
+      version INTEGER PRIMARY KEY
+    );
+  `);
+
+  const versionRow = await pool.query<{ version: number }>(
+    'SELECT version FROM schema_version LIMIT 1'
   );
 
-  CREATE TABLE IF NOT EXISTS teams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    password TEXT NOT NULL,
-    kind TEXT NOT NULL CHECK (kind IN ('team','judge')) DEFAULT 'team',
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-    UNIQUE (session_id, name)
-  );
+  if (!versionRow.rows[0]) {
+    await pool.query('INSERT INTO schema_version (version) VALUES ($1)', [SCHEMA_VERSION]);
+  } else if (versionRow.rows[0].version < SCHEMA_VERSION) {
+    await exec(`
+      DROP TABLE IF EXISTS votes;
+      DROP TABLE IF EXISTS teams;
+      DROP TABLE IF EXISTS sessions;
+      DELETE FROM schema_version;
+      INSERT INTO schema_version (version) VALUES (${SCHEMA_VERSION});
+    `);
+  }
 
-  CREATE UNIQUE INDEX IF NOT EXISTS ux_one_judge_per_session
-    ON teams(session_id) WHERE kind = 'judge';
+  await exec(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id BIGSERIAL PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL CHECK (status IN ('setup','open','closed')) DEFAULT 'setup',
+      points_per_team INTEGER NOT NULL DEFAULT 10,
+      judge_points INTEGER NOT NULL DEFAULT 30,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW())::BIGINT),
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW())::BIGINT)
+    );
 
-  CREATE TABLE IF NOT EXISTS votes (
-    voter_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    target_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    points INTEGER NOT NULL CHECK (points >= 0),
-    updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-    PRIMARY KEY (voter_team_id, target_team_id),
-    CHECK (voter_team_id <> target_team_id)
-  );
-`);
+    CREATE TABLE IF NOT EXISTS teams (
+      id BIGSERIAL PRIMARY KEY,
+      session_id BIGINT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      password TEXT NOT NULL,
+      kind TEXT NOT NULL CHECK (kind IN ('team','judge')) DEFAULT 'team',
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW())::BIGINT),
+      UNIQUE (session_id, name)
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_one_judge_per_session
+      ON teams(session_id) WHERE kind = 'judge';
+
+    CREATE TABLE IF NOT EXISTS votes (
+      voter_team_id BIGINT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      target_team_id BIGINT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+      points INTEGER NOT NULL CHECK (points >= 0),
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW())::BIGINT),
+      PRIMARY KEY (voter_team_id, target_team_id),
+      CHECK (voter_team_id <> target_team_id)
+    );
+  `);
+}
+
+await initDb();
 
 export type SessionStatus = 'setup' | 'open' | 'closed';
 export type TeamKind = 'team' | 'judge';
@@ -110,3 +150,33 @@ export interface VoteRow {
   points: number;
   updated_at: number;
 }
+
+export const db = {
+  ...createFacade(pool),
+  exec,
+  async withTransaction<T>(
+    work: (tx: ReturnType<typeof createFacade>) => Promise<T>
+  ): Promise<T> {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const tx = createFacade(client);
+      const result = await work(tx);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
+  async resetForTests() {
+    await exec(`
+      TRUNCATE TABLE votes, teams, sessions RESTART IDENTITY CASCADE;
+    `);
+  },
+  async close() {
+    await pool.end();
+  },
+};

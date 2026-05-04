@@ -22,16 +22,16 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
    - Self-voting is blocked.
    - Commissioner voting uses `judgePoints`.
 4. **Results**
-   - Admin can watch live totals during an event.
-   - Public leaderboard is available only when a session is closed.
+    - Admin can watch live totals during an event.
+    - Public leaderboard is available only when a session is closed.
 5. **Operations**
-    - App runs locally in native dev mode or as a single container with persisted SQLite storage.
-    - Native local dev requires `ADMIN_CODE` to be supplied in `server/.env` before startup.
-    - Containerized deployments must inject `ADMIN_CODE` and `COOKIE_SECRET`; there is no built-in admin fallback for deployed runtimes.
-    - Optional Azure Container Apps deployment artifacts may be checked into `infra/`, but must stay generic so deployers provide their own Azure context, image reference, and secrets.
+    - App runs as a single web container backed by PostgreSQL.
+    - Native local dev requires PostgreSQL plus `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in `server/.env`.
+    - Containerized deployments must inject `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL`; there is no built-in admin fallback for deployed runtimes.
+    - Optional Azure Container Apps deployment artifacts may be checked into `infra/`, but must stay generic so deployers provide their own Azure context, image reference, database credentials, and secrets.
 
 ## Success criteria
 - Admin can run multiple hackathon sessions without cross-session leakage.
 - Commissioner participation changes totals without appearing as a ranked hack.
-- Local and container deployments preserve state across restarts when configured with persistent storage.
+- Local and deployed environments preserve state across restarts through PostgreSQL.
 - Existing API and browser tests cover the main session, voting, and results flows.
