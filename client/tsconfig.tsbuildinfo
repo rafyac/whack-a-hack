@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/sessionselection.test.ts","./src/sessionselection.ts","./src/components/animatednumber.tsx","./src/components/pageshell.tsx","./src/components/sessionpicker.tsx","./src/pages/adminpage.tsx","./src/pages/loginpage.tsx","./src/pages/resultspage.tsx","./src/pages/votepage.tsx"],"version":"5.9.3"}
