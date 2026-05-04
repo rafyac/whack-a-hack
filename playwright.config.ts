@@ -1,7 +1,8 @@
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
 
-const e2eDataDir = path.resolve(process.cwd(), 'server', '.e2e-data');
+const testDatabaseUrl =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/whack_a_hack_test';
 
 export default defineConfig({
   testDir: './client/e2e',
@@ -17,7 +18,8 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       PORT: '4173',
-      DATA_DIR: e2eDataDir,
+      DATABASE_URL: testDatabaseUrl,
+      DATABASE_SSL_MODE: 'disable',
       ADMIN_CODE: 'admin-dev-code',
       COOKIE_SECRET: 'playwright-cookie-secret',
     },

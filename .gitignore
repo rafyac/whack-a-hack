@@ -17,6 +17,7 @@ server/.run-check/
 server/data/
 server/.test-data/
 server/.e2e-data/
+infra/main.json
 *.sqlite
 *.sqlite-journal
 *.db

@@ -16,10 +16,17 @@ param adminCode string
 @secure()
 param cookieSecret string
 
-@description('Azure Files share name that stores the SQLite database.')
+@description('Admin login name for Azure Database for PostgreSQL Flexible Server.')
+param postgresAdminLogin string
+
+@description('Admin password for Azure Database for PostgreSQL Flexible Server.')
+@secure()
+param postgresAdminPassword string
+
+@description('Application database name.')
 @minLength(3)
 @maxLength(63)
-param fileShareName string = 'sqlite'
+param databaseName string = 'whack_a_hack'
 
 @description('CPU allocated to the app container.')
 param containerCpu string = '0.5'
@@ -54,15 +61,19 @@ var commonTags = union(tags, {
   'managed-by': 'bicep'
 })
 
-module storage './modules/storage.bicep' = {
-  name: 'storage'
+module postgres './modules/postgres.bicep' = {
+  name: 'postgres'
   params: {
     workloadName: workloadName
     location: location
-    fileShareName: fileShareName
+    postgresAdminLogin: postgresAdminLogin
+    postgresAdminPassword: postgresAdminPassword
+    databaseName: databaseName
     tags: commonTags
   }
 }
+
+var databaseUrl = 'postgresql://${uriComponent('${postgresAdminLogin}@${postgres.outputs.postgresServerName}')}:${uriComponent(postgresAdminPassword)}@${postgres.outputs.fullyQualifiedDomainName}:5432/${databaseName}'
 
 module containerApp './modules/container-app.bicep' = {
   name: 'containerApp'
@@ -72,6 +83,7 @@ module containerApp './modules/container-app.bicep' = {
     containerImage: containerImage
     adminCode: adminCode
     cookieSecret: cookieSecret
+    databaseUrl: databaseUrl
     containerCpu: containerCpu
     containerMemory: containerMemory
     minReplicas: minReplicas
@@ -79,8 +91,6 @@ module containerApp './modules/container-app.bicep' = {
     registryServer: registryServer
     registryUsername: registryUsername
     registryPassword: registryPassword
-    storageAccountName: storage.outputs.storageAccountName
-    fileShareName: storage.outputs.fileShareName
     tags: commonTags
   }
 }
@@ -90,4 +100,6 @@ output containerAppName string = containerApp.outputs.containerAppName
 output containerAppUrl string = containerApp.outputs.containerAppUrl
 output managedEnvironmentName string = containerApp.outputs.managedEnvironmentName
 output logAnalyticsWorkspaceName string = containerApp.outputs.logAnalyticsWorkspaceName
-output storageAccountName string = storage.outputs.storageAccountName
+output postgresServerName string = postgres.outputs.postgresServerName
+output postgresHost string = postgres.outputs.fullyQualifiedDomainName
+output postgresDatabaseName string = postgres.outputs.databaseName

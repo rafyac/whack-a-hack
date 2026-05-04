@@ -1,30 +1,53 @@
-# Build the production image and run it locally with persistent SQLite data.
-# Mirrors the single-container production runtime (/data volume).
+# Build the production image and run it locally with PostgreSQL.
+# Mirrors the single-container production runtime with an external database.
 #
-# Before running, create a repo-root `.env` file (used by Docker Compose) with:
+# Before running, copy the repo-root `.env.example` to `.env` (used by Docker Compose) and set:
 #   ADMIN_CODE=choose-a-local-admin-code
 #   COOKIE_SECRET=choose-a-long-random-cookie-secret
+#   POSTGRES_PASSWORD=choose-a-local-postgres-password
 #
 # Then run:
 #   docker compose up --build
 #
 # Then open http://localhost:8080 and sign in with the ADMIN_CODE you supplied.
-# SQLite database persists in ./.localdata between runs.
+# PostgreSQL data persists in the named `postgres-data` volume between runs.
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: whack_a_hack
+      POSTGRES_USER: whack_a_hack
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Create a repo-root .env with POSTGRES_PASSWORD before running docker compose}"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   voting:
     build:
       context: .
       dockerfile: Dockerfile
     image: whack-a-hack:local
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
       NODE_ENV: production
       PORT: "8080"
-      DATA_DIR: /data
       ADMIN_CODE: "${ADMIN_CODE:?Create a repo-root .env with ADMIN_CODE before running docker compose}"
       COOKIE_SECRET: "${COOKIE_SECRET:?Create a repo-root .env with COOKIE_SECRET before running docker compose}"
-    volumes:
-      - ./.localdata:/data
+      COOKIE_SECURE: "false"
+      DATABASE_URL: "postgresql://whack_a_hack:${POSTGRES_PASSWORD}@postgres:5432/whack_a_hack"
+      DATABASE_SSL_MODE: disable
     restart: unless-stopped
+
+volumes:
+  postgres-data:

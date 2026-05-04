@@ -15,6 +15,10 @@ param adminCode string
 @secure()
 param cookieSecret string
 
+@description('Application PostgreSQL connection string.')
+@secure()
+param databaseUrl string
+
 @description('CPU allocated to the app container.')
 param containerCpu string
 
@@ -37,12 +41,6 @@ param registryUsername string = ''
 @secure()
 param registryPassword string = ''
 
-@description('Storage account name that backs the Azure Files share.')
-param storageAccountName string
-
-@description('Azure Files share name mounted into the container app.')
-param fileShareName string
-
 @description('Optional tags applied to provisioned resources.')
 param tags object = {}
 
@@ -50,12 +48,7 @@ var resourceSuffix = uniqueString(resourceGroup().id, workloadName)
 var logAnalyticsWorkspaceName = 'log-${workloadName}-${resourceSuffix}'
 var managedEnvironmentName = 'cae-${workloadName}-${resourceSuffix}'
 var containerAppName = 'ca-${workloadName}'
-var storageRegistrationName = 'sqlite'
 var usePrivateRegistry = !empty(registryServer) && !empty(registryUsername) && !empty(registryPassword)
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-  name: storageAccountName
-}
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: logAnalyticsWorkspaceName
@@ -80,19 +73,6 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         customerId: logAnalyticsWorkspace.properties.customerId
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
-    }
-  }
-}
-
-resource environmentStorage 'Microsoft.App/managedEnvironments/storages@2024-03-01' = {
-  name: storageRegistrationName
-  parent: managedEnvironment
-  properties: {
-    azureFile: {
-      accountName: storageAccountName
-      accountKey: storageAccount.listKeys().keys[0].value
-      shareName: fileShareName
-      accessMode: 'ReadWrite'
     }
   }
 }
@@ -123,6 +103,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           {
             name: 'cookie-secret'
             value: cookieSecret
+          }
+          {
+            name: 'database-url'
+            value: databaseUrl
           }
         ],
         usePrivateRegistry
@@ -163,8 +147,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: '8080'
             }
             {
-              name: 'DATA_DIR'
-              value: '/data'
+              name: 'DATABASE_URL'
+              secretRef: 'database-url'
+            }
+            {
+              name: 'DATABASE_SSL_MODE'
+              value: 'require'
             }
             {
               name: 'ADMIN_CODE'
@@ -207,19 +195,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               failureThreshold: 3
             }
           ]
-          volumeMounts: [
-            {
-              volumeName: 'data'
-              mountPath: '/data'
-            }
-          ]
-        }
-      ]
-      volumes: [
-        {
-          name: 'data'
-          storageType: 'AzureFile'
-          storageName: storageRegistrationName
         }
       ]
       scale: {

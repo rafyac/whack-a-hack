@@ -1,15 +1,10 @@
 import { spawn, spawnSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
-const dataDir = path.join(repoRoot, 'server', '.e2e-data');
-
-fs.rmSync(dataDir, { recursive: true, force: true });
-fs.mkdirSync(dataDir, { recursive: true });
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const build = spawnSync(npmCmd, ['run', 'build'], {
@@ -28,7 +23,9 @@ const server = spawn(process.execPath, ['server/dist/index.js'], {
     ...process.env,
     NODE_ENV: 'production',
     PORT: process.env.PORT ?? '4173',
-    DATA_DIR: dataDir,
+    DATABASE_URL:
+      process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:5432/whack_a_hack_test',
+    DATABASE_SSL_MODE: process.env.DATABASE_SSL_MODE ?? 'disable',
     ADMIN_CODE: process.env.ADMIN_CODE ?? 'admin-dev-code',
     COOKIE_SECRET: process.env.COOKIE_SECRET ?? 'playwright-cookie-secret',
   },

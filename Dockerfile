@@ -20,18 +20,14 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
-ENV DATA_DIR=/data
 
-# Install only production deps for the server (better-sqlite3 has a native binding)
+# Install only production deps for the server
 COPY server/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy server build + the SPA bundled into server/public
 COPY --from=build /app/server/dist ./dist
 COPY --from=build /app/server/public ./public
-
-RUN mkdir -p /data
-VOLUME ["/data"]
 
 EXPOSE 8080
 CMD ["node", "dist/index.js"]

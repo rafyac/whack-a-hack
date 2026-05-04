@@ -1,16 +1,11 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import supertest from 'supertest';
-
-const DATA_DIR = path.join(process.cwd(), 'server', '.test-data');
 
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_CODE = 'test-admin';
 process.env.COOKIE_SECRET = 'test-cookie-secret';
-process.env.DATA_DIR = DATA_DIR;
-
-fs.rmSync(DATA_DIR, { recursive: true, force: true });
-fs.mkdirSync(DATA_DIR, { recursive: true });
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/whack_a_hack_test';
+process.env.DATABASE_SSL_MODE = process.env.DATABASE_SSL_MODE || 'disable';
 
 const { createApp } = await import('../src/index.js');
 const { db } = await import('../src/db.js');
@@ -22,12 +17,8 @@ export function newAgent() {
   return supertest.agent(app);
 }
 
-export function resetDb() {
-  db.exec(`
-    DELETE FROM votes;
-    DELETE FROM teams;
-    DELETE FROM sessions;
-  `);
+export async function resetDb() {
+  await db.resetForTests();
 }
 
 export async function loginAdmin(agent: ReturnType<typeof newAgent>) {

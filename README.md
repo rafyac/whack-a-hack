@@ -1,6 +1,6 @@
 # Whack-A-Hack
 
-**Whack-A-Hack** is a single-container hackathon voting app. Admins create voting sessions, teams and the commissioner sign in with session-scoped credentials, votes are validated in the Node + SQLite backend, and final standings unlock when voting closes.
+**Whack-A-Hack** is a hackathon voting app built as one web container backed by PostgreSQL. Admins create voting sessions, teams and the commissioner sign in with session-scoped credentials, votes are validated in the Node backend, and final standings unlock when voting closes.
 
 ## First page
 
@@ -20,19 +20,34 @@ Requires Node 20+.
    npm run install:all
    ```
 
-2. Copy `server/.env.example` to `server/.env` and set your own `ADMIN_CODE` and `COOKIE_SECRET`.
-3. Start the app:
+2. Start PostgreSQL locally. The simplest option is the bundled Compose service:
+
+   Copy the repo-root `.env.example` to `.env` and set `POSTGRES_PASSWORD` there. That repo-root file is for Docker Compose values only.
+
+   ```bash
+   docker compose up -d postgres
+   ```
+
+3. Copy `server/.env.example` to `server/.env`. Set your own `ADMIN_CODE` and `COOKIE_SECRET`.
+   If you are using the bundled Compose postgres from step 2, set `DATABASE_URL` to:
+
+   ```dotenv
+   DATABASE_URL=postgresql://whack_a_hack:<POSTGRES_PASSWORD-from-repo-root-.env>@127.0.0.1:5432/whack_a_hack
+   ```
+
+   This file is for the native server runtime.
+4. Start the app:
 
    ```bash
    npm run dev
    ```
 
-4. Open `http://localhost:5173`.
-   - Vite serves the UI on `:5173`
-   - the Express API runs on `:8080`
-   - `/admin` uses the `ADMIN_CODE` value from `server/.env`
+5. Open `http://localhost:5173`.
+    - Vite serves the UI on `:5173`
+    - the Express API runs on `:8080`
+    - `/admin` uses the `ADMIN_CODE` value from `server/.env`
 
-SQLite data is stored in `server/data/voting.db`. Reset local state with:
+Reset local state by clearing the configured PostgreSQL schema:
 
 ```bash
 npm run dev:reset
@@ -40,13 +55,14 @@ npm run dev:reset
 
 ### Local production-style container
 
-Use the included compose file when you want the same single-container shape used for deployment:
+Use the included compose file when you want the same single-app-container shape used for deployment:
 
-1. Create a repo-root `.env` file for Docker Compose with your own values:
+1. Copy the repo-root `.env.example` to `.env` for Docker Compose and set your own values there:
 
    ```dotenv
-   ADMIN_CODE=choose-a-local-admin-code
-   COOKIE_SECRET=choose-a-long-random-cookie-secret
+    ADMIN_CODE=choose-a-local-admin-code
+    COOKIE_SECRET=choose-a-long-random-cookie-secret
+    POSTGRES_PASSWORD=choose-a-local-postgres-password
    ```
 
 2. Start the container:
@@ -57,8 +73,8 @@ docker compose up --build
 
 3. Open `http://localhost:8080`.
 
-- Admin login code: the `ADMIN_CODE` value from your repo-root `.env`
-- Persistent data directory: `./.localdata`
+   - Admin login code: the `ADMIN_CODE` value from your repo-root `.env`
+   - Persistent PostgreSQL volume: Docker volume `postgres-data`
 
 ## What the app does
 
@@ -72,29 +88,34 @@ docker compose up --build
 
 ### Recommended path: self-hosted single container
 
-The current app architecture is designed around one Node container:
+The current app architecture is designed around one Node container plus an external PostgreSQL database:
 
 - the React app is built into `server/public`
 - Express serves both the SPA and `/api`
-- SQLite persists under `DATA_DIR`
-- production should mount persistent storage at `/data`
+- the app connects through `DATABASE_URL`
+- production durability comes from PostgreSQL, not an app volume
 
-Build and run it directly:
+Build the app image directly:
 
 ```bash
 docker build -t whack-a-hack .
-docker run -d --name whack-a-hack -p 8080:8080 -e ADMIN_CODE=change-me -e COOKIE_SECRET=replace-with-a-long-random-secret -e DATA_DIR=/data -v whack-a-hack-data:/data whack-a-hack
 ```
 
-If you prefer, `docker-compose.yml` is already set up as the simplest starting point for local or small self-hosted installs, but it expects `ADMIN_CODE` and `COOKIE_SECRET` to be supplied by the caller.
+Then run it with your own PostgreSQL connection details:
+
+```bash
+docker run -d --name whack-a-hack -p 8080:8080 -e ADMIN_CODE=change-me -e COOKIE_SECRET=replace-with-a-long-random-secret -e DATABASE_URL=postgresql://user:password@host:5432/whack_a_hack -e DATABASE_SSL_MODE=require whack-a-hack
+```
+
+If you prefer, `docker-compose.yml` is already set up as the simplest starting point for local or small self-hosted installs.
 
 ### Azure Container Apps via Bicep
 
 The repo now includes **generic Azure Bicep** under `infra/` for deploying the same single-container app to **Azure Container Apps** with:
 
 - external ingress on port `8080`
-- Azure Files mounted at `/data` for SQLite persistence
-- secure deployment parameters for `ADMIN_CODE` and `COOKIE_SECRET`
+- Azure Database for PostgreSQL Flexible Server for durable state
+- secure deployment parameters for `ADMIN_CODE`, `COOKIE_SECRET`, and PostgreSQL admin credentials
 - no baked-in subscription IDs, resource group names, or personal Azure details
 
 Suggested flow:
@@ -112,7 +133,9 @@ az deployment group create \
   --parameters @infra/main.parameters.example.json \
   --parameters containerImage=<registry>/<image>:<tag> \
                adminCode=<your-admin-code> \
-               cookieSecret=<long-random-secret>
+               cookieSecret=<long-random-secret> \
+               postgresAdminLogin=<postgres-admin-login> \
+               postgresAdminPassword=<postgres-admin-password>
 ```
 
 If you use a **private** registry, also pass:
@@ -125,10 +148,10 @@ If you use a **private** registry, also pass:
 
 ### Operational notes
 
-- Keep `/data` on persistent storage so `voting.db` survives restarts and redeploys.
-- Set `ADMIN_CODE` and `COOKIE_SECRET` in your platform's env/secret configuration before first start; the image does not include a fallback admin code.
+- Set `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in your platform's env/secret configuration before first start; the image does not include a fallback admin code.
+- Use `DATABASE_SSL_MODE=require` for managed PostgreSQL services such as Azure Database for PostgreSQL Flexible Server.
 - Put the container behind your normal TLS/reverse-proxy setup if exposing it publicly.
-- Back up the mounted data volume as part of normal operations.
+- Back up the PostgreSQL database as part of normal operations.
 
 > The checked-in Azure files are intentionally generic. The deployer supplies subscription, resource group, image reference, and secret values at deployment time.
 

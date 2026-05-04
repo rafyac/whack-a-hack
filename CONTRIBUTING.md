@@ -6,7 +6,7 @@ Thanks for contributing.
 
 - For **app behavior changes**, update `specs/PRD.md` or `specs/FRD.md` before implementation, or include the spec update in the same pull request.
 - Keep changes aligned with `specs/architecture.md`, the current multi-session voting flow, and the existing test strategy.
-- Do not commit secrets, local `.env` files, or SQLite data files.
+- Do not commit secrets, local `.env` files, or database dumps.
 
 ## Local setup
 
@@ -16,9 +16,18 @@ Thanks for contributing.
    npm run install:all
    ```
 
-2. Copy `server/.env.example` to `server/.env` and set your own `ADMIN_CODE` and `COOKIE_SECRET`.
+2. Start PostgreSQL locally. The easiest path is to copy the repo-root `.env.example` to `.env`, set `POSTGRES_PASSWORD` there, and run `docker compose up -d postgres`. The repo-root `.env` is for Docker Compose values.
 
-3. Start the app:
+3. Copy `server/.env.example` to `server/.env`. Set your own `ADMIN_CODE` and `COOKIE_SECRET`.
+   If you are using the bundled Compose postgres from step 2, set:
+
+   ```dotenv
+   DATABASE_URL=postgresql://whack_a_hack:<POSTGRES_PASSWORD-from-repo-root-.env>@127.0.0.1:5432/whack_a_hack
+   ```
+
+   `server/.env` is for the native server runtime.
+
+4. Start the app:
 
    ```bash
    npm run dev

@@ -13,8 +13,8 @@ import {
   updateTeam,
 } from './helpers.js';
 
-beforeEach(() => {
-  resetDb();
+beforeEach(async () => {
+  await resetDb();
 });
 
 test('lists only open sessions and blocks login for setup/closed sessions', async () => {

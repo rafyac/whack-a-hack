@@ -6,7 +6,7 @@
   "scripts": {
     "install:all": "npm install && npm --prefix server install && npm --prefix client install",
     "dev": "concurrently -n server,client -c magenta,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
-    "dev:reset": "node -e \"const fs=require('fs');const p='server/data';if(fs.existsSync(p)){fs.rmSync(p,{recursive:true,force:true});console.log('cleared',p)}else{console.log(p,'already empty')}\"",
+    "dev:reset": "node scripts/reset-postgres.mjs",
     "build": "npm --prefix client run build && npm --prefix server run build",
     "start": "node server/dist/index.js",
     "test:server": "npm --prefix server run test",

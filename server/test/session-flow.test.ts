@@ -11,8 +11,8 @@ import {
   updateSession,
 } from './helpers.js';
 
-beforeEach(() => {
-  resetDb();
+beforeEach(async () => {
+  await resetDb();
 });
 
 test('runs the team + commissioner flow end to end', async () => {
