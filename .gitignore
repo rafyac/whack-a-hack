@@ -1,6 +1,10 @@
 node_modules/
 dist/
 build/
+.cache/
+.nyc_output/
+coverage/
+*.tsbuildinfo
 *.log
 .env
 .env.local
@@ -8,6 +12,11 @@ build/
 data/
 .localdata/
 .e2e-data/
+.run-check/
+server/.run-check/
+server/data/
+server/.test-data/
+server/.e2e-data/
 *.sqlite
 *.sqlite-journal
 *.db

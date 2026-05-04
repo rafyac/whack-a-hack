@@ -165,6 +165,6 @@ The repo includes a GitHub Actions workflow that:
 
 - runs `npm test` on pull requests and on `main`
 - validates the production container build with `docker build`
-- publishes `ghcr.io/rafyac/whack-a-hack:latest` and a commit SHA tag when changes land on `main`
+- publishes `ghcr.io/rafyac/whack-a-hack:latest` and a short commit SHA tag when changes land on `main`
 
 Pull requests only validate the image build. The publish step is reserved for trusted pushes to `main`.
