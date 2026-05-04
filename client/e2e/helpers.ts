@@ -29,11 +29,17 @@ export function uniqueSession(name: string) {
 
 export async function adminLogin(page: Page) {
   await page.goto('/admin');
-  if (await page.getByPlaceholder('admin code').isVisible()) {
-    await page.getByPlaceholder('admin code').fill('admin-dev-code');
-    await page.getByRole('button', { name: 'Unlock' }).click();
+  const sessionsButton = page.getByRole('button', { name: 'Sessions' });
+  if (await sessionsButton.isVisible().catch(() => false)) {
+    await expect(sessionsButton).toBeVisible();
+    return;
   }
-  await expect(page.getByRole('button', { name: 'Sessions' })).toBeVisible();
+
+  const adminCodeInput = page.getByPlaceholder('admin code');
+  await expect(adminCodeInput).toBeVisible();
+  await adminCodeInput.fill('admin-dev-code');
+  await page.getByRole('button', { name: 'Unlock' }).click();
+  await expect(sessionsButton).toBeVisible();
 }
 
 export async function adminLogout(page: Page) {
