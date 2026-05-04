@@ -2,6 +2,7 @@
 
 ## Session administration
 - Admin authentication uses a shared admin code supplied through `ADMIN_CODE`.
+- Admin can explicitly log out, which clears the admin cookie session.
 - Server startup fails if `ADMIN_CODE` is missing.
 - Admin can create, rename, delete, reset, open, and close sessions.
 - Each session stores:

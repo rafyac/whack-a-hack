@@ -4,7 +4,7 @@
 Whack-A-Hack is a hackathon voting app where an admin runs multiple independent voting sessions. Each session contains its own teams, optional commissioner, vote budget, and results.
 
 ## Users
-- **Admin**: creates sessions, manages teams, opens/closes voting, monitors live results.
+- **Admin**: signs into the control room, creates sessions, manages teams, opens/closes voting, monitors live results, and can explicitly log out.
 - **Team voter**: logs into one session and distributes a fixed points budget across other teams.
 - **Commissioner**: optional special voter with a separate budget; can vote for teams but is never a vote target.
 - **Public viewer**: sees final results only after a session is closed.

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   addTeam,
   adminLogin,
+  adminLogout,
   bulkGenerateTeams,
   clearSessions,
   createSession,
@@ -45,4 +46,10 @@ test('setup sessions stay hidden until opened and team password edits still work
   });
   await expect(page.getByText('Alpha')).toBeVisible();
   await expect(page.getByText(sessionName)).toBeVisible();
+});
+
+test('admin can log out back to the login gate', async ({ page }) => {
+  await adminLogin(page);
+  await adminLogout(page);
+  await expect(page.getByRole('button', { name: 'Sessions' })).not.toBeVisible();
 });

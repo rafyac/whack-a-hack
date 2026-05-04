@@ -20,6 +20,7 @@ import {
   Save,
   X,
   Gavel,
+  LogOut,
 } from 'lucide-react';
 import {
   api,
@@ -78,7 +79,21 @@ export default function AdminPage() {
     setErr(null);
     try {
       await api.adminLogin(code);
+      setCode('');
       setAuthed(true);
+    } catch (e: any) {
+      setErr(e.message);
+    }
+  }
+
+  async function logout() {
+    setErr(null);
+    try {
+      await api.adminLogout();
+      setAuthed(false);
+      setSessions([]);
+      setActiveId(null);
+      setTab('sessions');
     } catch (e: any) {
       setErr(e.message);
     }
@@ -130,22 +145,33 @@ export default function AdminPage() {
             and monitor live results without hopping between tools.
           </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[20rem]">
-          <div className="subtle-card">
-            <div className="text-xs uppercase tracking-[0.22em] text-white/45">Sessions</div>
-            <div className="mt-2 text-3xl font-display font-bold">{sessions.length}</div>
-          </div>
-          <div className="subtle-card">
-            <div className="text-xs uppercase tracking-[0.22em] text-white/45">
-              Active focus
+        <div className="flex flex-col gap-3 lg:min-w-[20rem] lg:items-end">
+          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[20rem]">
+            <div className="subtle-card">
+              <div className="text-xs uppercase tracking-[0.22em] text-white/45">
+                Sessions
+              </div>
+              <div className="mt-2 text-3xl font-display font-bold">{sessions.length}</div>
             </div>
-            <div className="mt-2 text-lg font-semibold">{active?.name ?? 'Pick a session'}</div>
-            <div className="mt-1 text-sm text-white/50 capitalize">
-              {active?.status ?? 'No active session yet'}
+            <div className="subtle-card">
+              <div className="text-xs uppercase tracking-[0.22em] text-white/45">
+                Active focus
+              </div>
+              <div className="mt-2 text-lg font-semibold">
+                {active?.name ?? 'Pick a session'}
+              </div>
+              <div className="mt-1 text-sm text-white/50 capitalize">
+                {active?.status ?? 'No active session yet'}
+              </div>
             </div>
           </div>
+          <button className="btn-ghost self-start lg:self-end" onClick={logout}>
+            <LogOut className="h-4 w-4" /> Log out
+          </button>
         </div>
       </div>
+
+      {err && <div className="feedback-banner feedback-error">{err}</div>}
 
       <div className="neon-card !p-2 flex flex-wrap gap-2">
         <TabBtn active={tab === 'sessions'} onClick={() => setTab('sessions')} icon={<Layers className="h-4 w-4" />}>
