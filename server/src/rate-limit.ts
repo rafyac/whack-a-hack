@@ -16,6 +16,12 @@ export type RateLimitConfig = {
 
 export type RateLimitOverrides = Partial<RateLimitConfig>;
 
+function isAuthPath(request: Request): boolean {
+  return (
+    request.originalUrl === '/api/auth/login' || request.originalUrl === '/api/admin/login'
+  );
+}
+
 function positiveIntFromEnv(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -60,6 +66,7 @@ export function createApiRateLimiter(config: RateLimitConfig): RateLimitRequestH
   return buildLimiter({
     windowMs: config.apiWindowMs,
     max: config.apiMax,
+    skip: isAuthPath,
   });
 }
 

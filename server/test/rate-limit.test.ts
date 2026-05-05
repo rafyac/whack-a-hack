@@ -64,3 +64,24 @@ test('login endpoints use a stricter limiter and ignore successful sign-ins', as
       assert.equal(body.error, 'too many requests, please try again later');
     });
 });
+
+test('login endpoints are excluded from the general api limiter', async () => {
+  const app = createApp({
+    rateLimit: {
+      apiWindowMs: 60_000,
+      apiMax: 1,
+      authWindowMs: 60_000,
+      authMax: 2,
+    },
+  });
+  const request = supertest(app);
+
+  await request.get('/api/me').expect(200);
+  await request.get('/api/me').expect(429);
+
+  await request.post('/api/admin/login').send({ adminCode: 'test-admin' }).expect(200);
+  await request
+    .post('/api/admin/login')
+    .send({ adminCode: 'wrong-admin' })
+    .expect(401);
+});
