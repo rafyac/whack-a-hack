@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM node:20-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 
 # Build the client
@@ -16,7 +16,7 @@ COPY server/ server/
 RUN cd server && npm run build
 
 # ---- Runtime stage ----
-FROM node:20-alpine AS runtime
+FROM node:25-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
