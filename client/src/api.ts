@@ -37,15 +37,38 @@ export interface ResultRow {
   voters?: number;
 }
 
+interface CsrfState {
+  csrfToken: string | null;
+}
+
+let csrfToken: string | null = null;
+
+function isUnsafeMethod(method?: string) {
+  const normalized = (method ?? 'GET').toUpperCase();
+  return !['GET', 'HEAD', 'OPTIONS'].includes(normalized);
+}
+
+function rememberCsrfToken(data: unknown) {
+  if (!data || typeof data !== 'object' || !('csrfToken' in data)) return;
+  const nextToken = (data as { csrfToken?: unknown }).csrfToken;
+  if (nextToken === null) {
+    csrfToken = null;
+  } else if (typeof nextToken === 'string' && nextToken.length > 0) {
+    csrfToken = nextToken;
+  }
+}
+
 async function http<T>(
   url: string,
   init?: RequestInit & { json?: unknown }
 ): Promise<T> {
+  const method = init?.method ?? 'GET';
   const opts: RequestInit = {
     credentials: 'include',
     ...init,
     headers: {
       ...(init?.json !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(isUnsafeMethod(method) && csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       ...(init?.headers || {}),
     },
     body:
@@ -59,6 +82,7 @@ async function http<T>(
   } catch {
     /* ignore */
   }
+  rememberCsrfToken(data);
   if (!res.ok) {
     const message = data?.error || `${res.status} ${res.statusText}`;
     throw new Error(message);
@@ -69,11 +93,13 @@ async function http<T>(
 export const api = {
   // ---------- Public / team ----------
   me: () =>
-    http<{
-      team: Team | null;
-      admin: boolean;
-      session: Session | null;
-    }>('/api/me'),
+    http<
+      {
+        team: Team | null;
+        admin: boolean;
+        session: Session | null;
+      } & CsrfState
+    >('/api/me'),
 
   openSessions: () =>
     http<{ sessions: Session[] }>('/api/sessions/open'),
@@ -87,12 +113,12 @@ export const api = {
     ),
 
   login: (sessionId: number, name: string, password: string) =>
-    http<{ team: Team; session: Session }>('/api/auth/login', {
+    http<{ team: Team; session: Session } & CsrfState>('/api/auth/login', {
       method: 'POST',
       json: { sessionId, name, password },
     }),
 
-  logout: () => http<{ ok: true }>('/api/auth/logout', { method: 'POST' }),
+  logout: () => http<{ ok: true } & CsrfState>('/api/auth/logout', { method: 'POST' }),
 
   myVotes: () =>
     http<{
@@ -115,12 +141,12 @@ export const api = {
 
   // ---------- Admin ----------
   adminLogin: (adminCode: string) =>
-    http<{ ok: true }>('/api/admin/login', {
+    http<{ ok: true } & CsrfState>('/api/admin/login', {
       method: 'POST',
       json: { adminCode },
     }),
   adminLogout: () =>
-    http<{ ok: true }>('/api/admin/logout', { method: 'POST' }),
+    http<{ ok: true } & CsrfState>('/api/admin/logout', { method: 'POST' }),
 
   adminSessions: () =>
     http<{ sessions: Session[] }>('/api/admin/sessions'),

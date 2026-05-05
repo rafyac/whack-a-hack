@@ -3,6 +3,7 @@ import test, { beforeEach } from 'node:test';
 import {
   createSession,
   createTeam,
+  getCsrfToken,
   loginAdmin,
   loginTeam,
   newAgent,
@@ -54,10 +55,12 @@ test('runs the team + commissioner flow end to end', async () => {
 
   const teamAgent = newAgent();
   await loginTeam(teamAgent, session.id, alpha.name, 'alpha-pass').expect(200);
+  const teamCsrfToken = await getCsrfToken(teamAgent);
   const mine = await teamAgent.get('/api/votes/mine').expect(200);
   assert.equal(mine.body.budget, 5);
   await teamAgent
     .put('/api/votes/mine')
+    .set('x-csrf-token', teamCsrfToken)
     .send({
       allocations: [
         { teamId: bravo.id, points: 3 },
@@ -68,10 +71,12 @@ test('runs the team + commissioner flow end to end', async () => {
 
   const commissionerAgent = newAgent();
   await loginTeam(commissionerAgent, session.id, commissioner.name, commissioner.password).expect(200);
+  const commissionerCsrfToken = await getCsrfToken(commissionerAgent);
   const commissionerMine = await commissionerAgent.get('/api/votes/mine').expect(200);
   assert.equal(commissionerMine.body.budget, 15);
   await commissionerAgent
     .put('/api/votes/mine')
+    .set('x-csrf-token', commissionerCsrfToken)
     .send({
       allocations: [
         { teamId: alpha.id, points: 5 },

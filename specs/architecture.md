@@ -32,6 +32,7 @@ Important implemented rules:
 ## Auth and session handling
 - **Admin auth**: shared admin code from `ADMIN_CODE`, signed HttpOnly cookie, and startup failure when `ADMIN_CODE` is missing.
 - **Voter auth**: signed HttpOnly cookie tied to one participant record.
+- **CSRF mitigation**: cookie-authenticated write requests must present a per-browser CSRF token that the server issues on login and on `/api/me` session restore.
 - Session scoping is enforced on login, vote submission, and results queries.
 
 ## Deployment model
