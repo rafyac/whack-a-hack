@@ -4,7 +4,7 @@ param workloadName string
 @description('Azure region for the PostgreSQL server.')
 param location string
 
-@description('Admin login name for the PostgreSQL server.')
+@description('Admin login name for the PostgreSQL server. For Flexible Server connections, use this plain username without an @server suffix.')
 param postgresAdminLogin string
 
 @description('Admin password for the PostgreSQL server.')
@@ -19,6 +19,7 @@ param tags object = {}
 
 var resourceSuffix = take(uniqueString(subscription().id, resourceGroup().id, workloadName), 18)
 var postgresServerName = 'psql-${resourceSuffix}'
+var postgresHost = '${postgresServerName}.postgres.database.azure.com'
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-01-20-preview' = {
   name: postgresServerName
@@ -64,5 +65,5 @@ resource allowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/firewallR
 }
 
 output postgresServerName string = postgresServer.name
-output fullyQualifiedDomainName string = postgresServer.properties.fullyQualifiedDomainName
+output postgresHost string = postgresHost
 output databaseName string = applicationDatabase.name

@@ -73,7 +73,7 @@ module postgres './modules/postgres.bicep' = {
   }
 }
 
-var databaseUrl = 'postgresql://${uriComponent('${postgresAdminLogin}@${postgres.outputs.postgresServerName}')}:${uriComponent(postgresAdminPassword)}@${postgres.outputs.fullyQualifiedDomainName}:5432/${databaseName}'
+var databaseUrl = 'postgresql://${uriComponent(postgresAdminLogin)}:${uriComponent(postgresAdminPassword)}@${postgres.outputs.postgresHost}:5432/${databaseName}'
 
 module containerApp './modules/container-app.bicep' = {
   name: 'containerApp'
@@ -101,5 +101,5 @@ output containerAppUrl string = containerApp.outputs.containerAppUrl
 output managedEnvironmentName string = containerApp.outputs.managedEnvironmentName
 output logAnalyticsWorkspaceName string = containerApp.outputs.logAnalyticsWorkspaceName
 output postgresServerName string = postgres.outputs.postgresServerName
-output postgresHost string = postgres.outputs.fullyQualifiedDomainName
+output postgresHost string = postgres.outputs.postgresHost
 output postgresDatabaseName string = postgres.outputs.databaseName
