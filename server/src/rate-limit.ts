@@ -17,8 +17,12 @@ export type RateLimitConfig = {
 export type RateLimitOverrides = Partial<RateLimitConfig>;
 
 function isAuthPath(request: Request): boolean {
+  const normalizedOriginalUrl = request.originalUrl.split('?')[0];
   return (
-    request.originalUrl === '/api/auth/login' || request.originalUrl === '/api/admin/login'
+    request.path === '/auth/login' ||
+    request.path === '/admin/login' ||
+    normalizedOriginalUrl === '/api/auth/login' ||
+    normalizedOriginalUrl === '/api/admin/login'
   );
 }
 

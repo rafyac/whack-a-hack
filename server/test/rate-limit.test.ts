@@ -65,7 +65,7 @@ test('login endpoints use a stricter limiter and ignore successful sign-ins', as
     });
 });
 
-test('login endpoints are excluded from the general api limiter', async () => {
+test('login endpoints are excluded from the general api limiter even with query strings', async () => {
   const app = createApp({
     rateLimit: {
       apiWindowMs: 60_000,
@@ -79,9 +79,9 @@ test('login endpoints are excluded from the general api limiter', async () => {
   await request.get('/api/me').expect(200);
   await request.get('/api/me').expect(429);
 
-  await request.post('/api/admin/login').send({ adminCode: 'test-admin' }).expect(200);
+  await request.post('/api/admin/login?x=1').send({ adminCode: 'test-admin' }).expect(200);
   await request
-    .post('/api/admin/login')
+    .post('/api/admin/login?x=1')
     .send({ adminCode: 'wrong-admin' })
     .expect(401);
 });
