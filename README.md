@@ -35,7 +35,7 @@ Requires Node 20+.
    DATABASE_URL=postgresql://whack_a_hack:<POSTGRES_PASSWORD-from-repo-root-.env>@127.0.0.1:5432/whack_a_hack
    ```
 
-   This file is for the native server runtime.
+   This file is for the native server runtime. Rate limiting is enabled by default; optional overrides are documented in `server/.env.example`.
 4. Start the app:
 
    ```bash
@@ -151,6 +151,7 @@ If you use a **private** registry, also pass:
 ### Operational notes
 
 - Set `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in your platform's env/secret configuration before first start; the image does not include a fallback admin code.
+- The server applies permissive per-IP API rate limits plus stricter failed-login throttles by default. Override `API_RATE_LIMIT_*` or `AUTH_RATE_LIMIT_*` only if your deployment needs different thresholds.
 - Use `DATABASE_SSL_MODE=require` for managed PostgreSQL services such as Azure Database for PostgreSQL Flexible Server.
 - Put the container behind your normal TLS/reverse-proxy setup if exposing it publicly.
 - Back up the PostgreSQL database as part of normal operations.

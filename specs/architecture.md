@@ -28,6 +28,7 @@ Important implemented rules:
 - The client talks to the server over `/api`.
 - The server owns all business rules; the client mirrors rules for UX but server validation is authoritative.
 - Built client assets are served by the same Node process in deployed/containerized environments.
+- `/api` is fronted by Express rate limiting with a separate stricter limiter for login endpoints; health checks bypass the API limiter.
 
 ## Auth and session handling
 - **Admin auth**: shared admin code from `ADMIN_CODE`, signed HttpOnly cookie, and startup failure when `ADMIN_CODE` is missing.
