@@ -109,6 +109,8 @@ docker run -d --name whack-a-hack -p 8080:8080 -e ADMIN_CODE=change-me -e COOKIE
 
 If you prefer, `docker-compose.yml` is already set up as the simplest starting point for local or small self-hosted installs.
 
+If you do not want to build your own image, you can also use the public image published by this repo directly: `ghcr.io/rafyac/whack-a-hack:latest`.
+
 ### Azure Container Apps via Bicep
 
 The repo now includes **generic Azure Bicep** under `infra/` for deploying the same single-container app to **Azure Container Apps** with:
@@ -120,7 +122,7 @@ The repo now includes **generic Azure Bicep** under `infra/` for deploying the s
 
 Suggested flow:
 
-1. Build and publish your image to a registry you control.
+1. Use `ghcr.io/rafyac/whack-a-hack:latest` directly, or build and publish your own image to a registry you control.
 2. Create or choose a resource group in the Azure subscription you want to use.
 3. Review `infra/main.parameters.example.json` and adjust the non-secret values.
 4. Deploy the stack with your own secure values:
@@ -188,6 +190,6 @@ The repo includes a GitHub Actions workflow that:
 
 - runs `npm test` on pull requests and on `main`
 - validates the production container build with `docker build`
-- publishes `ghcr.io/rafyac/whack-a-hack:latest` and a short commit SHA tag when changes land on `main`
+- publishes `ghcr.io/<owner>/<repo>:latest` and a short commit SHA tag when changes land on `main`
 
 Pull requests only validate the image build. The publish step is reserved for trusted pushes to `main`.
