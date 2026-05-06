@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   expect,
   type APIRequestContext,
@@ -27,7 +28,7 @@ export async function clearSessions(baseURL: string) {
 }
 
 export function uniqueSession(name: string) {
-  return `${name} ${Date.now()} ${Math.random().toString(36).slice(2, 6)}`;
+  return `${name} ${Date.now()} ${randomUUID().slice(0, 8)}`;
 }
 
 export async function adminLogin(page: Page) {
