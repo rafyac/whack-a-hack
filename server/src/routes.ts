@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import csurf from 'csurf';
 import {
   Router,
   type ErrorRequestHandler,
@@ -123,51 +123,30 @@ const clearCookieOpts = {
 };
 
 const csrfCookieOpts = {
-  ...cookieOpts,
+  key: CSRF_COOKIE,
   httpOnly: true,
+  sameSite: cookieOpts.sameSite,
+  secure: cookieOpts.secure,
+  path: cookieOpts.path,
+  maxAge: cookieOpts.maxAge,
 };
 
 const clearCsrfCookieOpts = {
   ...clearCookieOpts,
-  httpOnly: csrfCookieOpts.httpOnly,
+  sameSite: csrfCookieOpts.sameSite,
+  secure: csrfCookieOpts.secure,
+  path: csrfCookieOpts.path,
 };
 
-function newCsrfToken(): string {
-  return crypto.randomBytes(32).toString('base64url');
-}
+const issueCsrfToken = csurf({
+  cookie: csrfCookieOpts,
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+});
 
-function csrfFromCookie(req: Request): string | null {
-  const raw = req.cookies?.[CSRF_COOKIE];
-  if (!raw) return null;
-  return unsign(raw);
-}
-
-function setCsrfCookie(res: Response, token = newCsrfToken()): string {
-  res.cookie(CSRF_COOKIE, sign(token), csrfCookieOpts);
-  return token;
-}
-
-function ensureCsrfToken(req: Request, res: Response): string {
-  return csrfFromCookie(req) ?? setCsrfCookie(res);
-}
-
-const requireCsrf: RequestHandler = (req, res, next) => {
-  const csrfToken = csrfFromCookie(req);
-  const headerToken = req.get(CSRF_HEADER);
-  if (!csrfToken || !headerToken || headerToken !== csrfToken) {
-    res.status(403).json({ error: 'csrf validation failed' });
-    return;
-  }
-  next();
-};
-
-const requireCsrfIfAuthenticated: RequestHandler = (req, res, next) => {
-  if (!req.cookies?.[TEAM_COOKIE] && !req.cookies?.[ADMIN_COOKIE]) {
-    next();
-    return;
-  }
-  requireCsrf(req, res, next);
-};
+const requireCsrf = csurf({
+  cookie: csrfCookieOpts,
+  value: (req) => req.get(CSRF_HEADER) || '',
+});
 
 async function getSessionTeams(sessionId: number): Promise<TeamRow[]> {
   return db.many<TeamRow>(
@@ -222,11 +201,12 @@ export const api = Router();
 
 api.get(
   '/me',
+  issueCsrfToken,
   asyncHandler(async (req, res) => {
     const team = await teamFromCookie(req);
     const session = team ? await getSession(team.session_id) : null;
     const admin = isAdmin(req);
-    const csrfToken = team || admin ? ensureCsrfToken(req, res) : null;
+    const csrfToken = team || admin ? req.csrfToken() : null;
     res.json({
       team: team ? publicTeam(team) : null,
       admin,
@@ -286,6 +266,7 @@ api.get(
 
 api.post(
   '/auth/login',
+  issueCsrfToken,
   asyncHandler(async (req, res) => {
     const parsed = z
       .object({
@@ -319,13 +300,13 @@ api.post(
       return;
     }
 
-    const csrfToken = setCsrfCookie(res);
     res.cookie(TEAM_COOKIE, sign(String(team.id)), cookieOpts);
+    const csrfToken = req.csrfToken();
     res.json({ team: publicTeam(team), session: publicSession(session), csrfToken });
   })
 );
 
-api.post('/auth/logout', requireCsrfIfAuthenticated, (_req, res) => {
+api.post('/auth/logout', requireCsrf, (_req, res) => {
   res.clearCookie(TEAM_COOKIE, clearCookieOpts);
   res.clearCookie(CSRF_COOKIE, clearCsrfCookieOpts);
   res.json({ ok: true, csrfToken: null });
@@ -466,7 +447,7 @@ api.get(
   })
 );
 
-api.post('/admin/login', (req, res) => {
+api.post('/admin/login', issueCsrfToken, (req, res) => {
   const parsed = z.object({ adminCode: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'adminCode required' });
@@ -476,12 +457,12 @@ api.post('/admin/login', (req, res) => {
     res.status(401).json({ error: 'invalid admin code' });
     return;
   }
-  const csrfToken = setCsrfCookie(res);
   res.cookie(ADMIN_COOKIE, sign('admin'), cookieOpts);
+  const csrfToken = req.csrfToken();
   res.json({ ok: true, csrfToken });
 });
 
-api.post('/admin/logout', requireCsrfIfAuthenticated, (_req, res) => {
+api.post('/admin/logout', requireCsrf, (_req, res) => {
   res.clearCookie(ADMIN_COOKIE, clearCookieOpts);
   res.clearCookie(CSRF_COOKIE, clearCsrfCookieOpts);
   res.json({ ok: true, csrfToken: null });
@@ -889,6 +870,10 @@ api.get(
 );
 
 api.use(((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if ((error as { code?: string }).code === 'EBADCSRFTOKEN') {
+    res.status(403).json({ error: 'csrf validation failed' });
+    return;
+  }
   console.error('api error', error);
   if (!res.headersSent) {
     res.status(500).json({ error: 'internal server error' });
