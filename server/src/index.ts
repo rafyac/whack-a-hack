@@ -7,13 +7,26 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { api } from './routes.js';
+import {
+  createApiRateLimiter,
+  createAuthRateLimiter,
+  resolveRateLimitConfig,
+  type RateLimitOverrides,
+} from './rate-limit.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const spaDir = path.resolve(__dirname, '../public');
 
-export function createApp() {
+type CreateAppOptions = {
+  rateLimit?: RateLimitOverrides;
+};
+
+export function createApp(options: CreateAppOptions = {}) {
   const app = express();
+  const rateLimitConfig = resolveRateLimitConfig(options.rateLimit);
+  const apiRateLimiter = createApiRateLimiter(rateLimitConfig);
+  const authRateLimiter = createAuthRateLimiter(rateLimitConfig);
 
   app.use(express.json({ limit: '64kb' }));
   app.use(cookieParser());
@@ -27,11 +40,13 @@ export function createApp() {
     );
   }
 
-  app.use('/api', api);
-
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
   });
+
+  app.use('/api/auth/login', authRateLimiter);
+  app.use('/api/admin/login', authRateLimiter);
+  app.use('/api', apiRateLimiter, api);
 
   if (fs.existsSync(spaDir)) {
     app.use(express.static(spaDir));

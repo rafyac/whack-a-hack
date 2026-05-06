@@ -24,6 +24,7 @@
 - Login requires session id, participant name, and password.
 - Only `open` sessions are available for voter login.
 - Successful login creates a voter session tied to one participant and one session.
+- Failed login attempts are rate-limited per IP with stricter thresholds than the general API traffic limit.
 - Cookie-authenticated write routes require a valid CSRF token issued at login or via session restore.
 
 ## Ballot rules
@@ -49,6 +50,7 @@
 - **Local container parity**: `docker compose` runs the production image plus a PostgreSQL container, using caller-supplied `ADMIN_CODE`, `COOKIE_SECRET`, and `POSTGRES_PASSWORD`.
 - **Cloud target**: single app container deployment with an external PostgreSQL database and environment-managed `ADMIN_CODE`/`COOKIE_SECRET`/`DATABASE_URL`.
 - **Azure option**: parameterized Bicep in `infra/` can deploy the app to Azure Container Apps plus Azure Database for PostgreSQL Flexible Server using a caller-supplied image reference and secure parameters.
+- `/api` requests use permissive per-IP throttling, while `/api/health` and built static assets remain outside the limiter path.
 
 ## Test strategy
 - Server coverage is API-level integration testing with `node:test` and `supertest`.
