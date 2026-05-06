@@ -17,10 +17,11 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
    - Admin can add, edit, and delete teams within a session.
    - Passwords can be generated or entered manually and later edited by admin.
 3. **Voting**
-   - Team login requires session, team name, and password.
-   - Teams must allocate exactly `pointsPerTeam`.
-   - Self-voting is blocked.
-   - Commissioner voting uses `judgePoints`.
+    - Team login requires session, team name, and password.
+    - Cookie-authenticated write actions require a CSRF token issued at login or session restore.
+    - Teams must allocate exactly `pointsPerTeam`.
+    - Self-voting is blocked.
+    - Commissioner voting uses `judgePoints`.
 4. **Results**
     - Admin can watch live totals during an event.
     - Public leaderboard is available only when a session is closed.

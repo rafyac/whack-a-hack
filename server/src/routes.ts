@@ -1,3 +1,4 @@
+import csurf from 'csurf';
 import {
   Router,
   type ErrorRequestHandler,
@@ -25,6 +26,8 @@ import { budgetForTeam, validateAllocations } from './vote-logic.js';
 
 const TEAM_COOKIE = 'team_session';
 const ADMIN_COOKIE = 'admin_session';
+const CSRF_COOKIE = 'csrf_session';
+const CSRF_HEADER = 'x-csrf-token';
 const DEFAULT_JUDGE_NAME = 'Commissioner';
 const cookieSecure =
   process.env.COOKIE_SECURE === undefined
@@ -119,6 +122,32 @@ const clearCookieOpts = {
   path: cookieOpts.path,
 };
 
+const csrfCookieOpts = {
+  key: CSRF_COOKIE,
+  httpOnly: true,
+  sameSite: cookieOpts.sameSite,
+  secure: cookieOpts.secure,
+  path: cookieOpts.path,
+  maxAge: cookieOpts.maxAge,
+};
+
+const clearCsrfCookieOpts = {
+  ...clearCookieOpts,
+  sameSite: csrfCookieOpts.sameSite,
+  secure: csrfCookieOpts.secure,
+  path: csrfCookieOpts.path,
+};
+
+const issueCsrfToken = csurf({
+  cookie: csrfCookieOpts,
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS', 'POST'],
+});
+
+const requireCsrf = csurf({
+  cookie: csrfCookieOpts,
+  value: (req) => req.get(CSRF_HEADER) || '',
+});
+
 async function getSessionTeams(sessionId: number): Promise<TeamRow[]> {
   return db.many<TeamRow>(
     `SELECT * FROM teams
@@ -172,13 +201,17 @@ export const api = Router();
 
 api.get(
   '/me',
+  issueCsrfToken,
   asyncHandler(async (req, res) => {
     const team = await teamFromCookie(req);
     const session = team ? await getSession(team.session_id) : null;
+    const admin = isAdmin(req);
+    const csrfToken = team || admin ? req.csrfToken() : null;
     res.json({
       team: team ? publicTeam(team) : null,
-      admin: isAdmin(req),
+      admin,
       session: session ? publicSession(session) : null,
+      csrfToken,
     });
   })
 );
@@ -233,6 +266,7 @@ api.get(
 
 api.post(
   '/auth/login',
+  issueCsrfToken,
   asyncHandler(async (req, res) => {
     const parsed = z
       .object({
@@ -267,13 +301,15 @@ api.post(
     }
 
     res.cookie(TEAM_COOKIE, sign(String(team.id)), cookieOpts);
-    res.json({ team: publicTeam(team), session: publicSession(session) });
+    const csrfToken = req.csrfToken();
+    res.json({ team: publicTeam(team), session: publicSession(session), csrfToken });
   })
 );
 
-api.post('/auth/logout', (_req, res) => {
+api.post('/auth/logout', requireCsrf, (_req, res) => {
   res.clearCookie(TEAM_COOKIE, clearCookieOpts);
-  res.json({ ok: true });
+  res.clearCookie(CSRF_COOKIE, clearCsrfCookieOpts);
+  res.json({ ok: true, csrfToken: null });
 });
 
 api.get(
@@ -322,6 +358,7 @@ const allocSchema = z.object({
 api.put(
   '/votes/mine',
   requireTeam,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const voter = (req as AuthedRequest).team!;
     const session = await getSession(voter.session_id);
@@ -410,7 +447,7 @@ api.get(
   })
 );
 
-api.post('/admin/login', (req, res) => {
+api.post('/admin/login', issueCsrfToken, (req, res) => {
   const parsed = z.object({ adminCode: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'adminCode required' });
@@ -421,12 +458,14 @@ api.post('/admin/login', (req, res) => {
     return;
   }
   res.cookie(ADMIN_COOKIE, sign('admin'), cookieOpts);
-  res.json({ ok: true });
+  const csrfToken = req.csrfToken();
+  res.json({ ok: true, csrfToken });
 });
 
-api.post('/admin/logout', (_req, res) => {
+api.post('/admin/logout', requireCsrf, (_req, res) => {
   res.clearCookie(ADMIN_COOKIE, clearCookieOpts);
-  res.json({ ok: true });
+  res.clearCookie(CSRF_COOKIE, clearCsrfCookieOpts);
+  res.json({ ok: true, csrfToken: null });
 });
 
 api.get(
@@ -441,6 +480,7 @@ api.get(
 api.post(
   '/admin/sessions',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const parsed = z
       .object({
@@ -494,6 +534,7 @@ api.post(
 api.patch(
   '/admin/sessions/:id',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) {
@@ -565,6 +606,7 @@ api.patch(
 api.delete(
   '/admin/sessions/:id',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) {
@@ -579,6 +621,7 @@ api.delete(
 api.post(
   '/admin/sessions/:id/reset',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) {
@@ -618,6 +661,7 @@ api.get(
 api.post(
   '/admin/sessions/:id/teams',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) {
@@ -653,6 +697,7 @@ api.post(
 api.post(
   '/admin/sessions/:id/teams/bulk',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) {
@@ -702,6 +747,7 @@ api.post(
 api.patch(
   '/admin/teams/:teamId',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const teamId = Number(req.params.teamId);
     if (!Number.isFinite(teamId)) {
@@ -751,6 +797,7 @@ api.patch(
 api.delete(
   '/admin/teams/:teamId',
   requireAdmin,
+  requireCsrf,
   asyncHandler(async (req, res) => {
     const teamId = Number(req.params.teamId);
     if (!Number.isFinite(teamId)) {
@@ -823,6 +870,10 @@ api.get(
 );
 
 api.use(((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if ((error as { code?: string }).code === 'EBADCSRFTOKEN') {
+    res.status(403).json({ error: 'csrf validation failed' });
+    return;
+  }
   console.error('api error', error);
   if (!res.headersSent) {
     res.status(500).json({ error: 'internal server error' });

@@ -25,6 +25,7 @@
 - Only `open` sessions are available for voter login.
 - Successful login creates a voter session tied to one participant and one session.
 - Failed login attempts are rate-limited per IP with stricter thresholds than the general API traffic limit.
+- Cookie-authenticated write routes require a valid CSRF token issued at login or via session restore.
 
 ## Ballot rules
 - Voters can only submit allocations inside their own session.

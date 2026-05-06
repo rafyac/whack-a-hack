@@ -28,6 +28,14 @@ export async function loginAdmin(agent: ReturnType<typeof newAgent>) {
     .expect(200);
 }
 
+export async function getCsrfToken(agent: ReturnType<typeof newAgent>) {
+  const res = await agent.get('/api/me').expect(200);
+  if (typeof res.body.csrfToken !== 'string' || res.body.csrfToken.length === 0) {
+    throw new Error('missing csrf token');
+  }
+  return res.body.csrfToken as string;
+}
+
 export async function createSession(
   agent: ReturnType<typeof newAgent>,
   {
@@ -36,8 +44,10 @@ export async function createSession(
     judgePoints = 30,
   }: { name: string; pointsPerTeam?: number; judgePoints?: number }
 ) {
+  const csrfToken = await getCsrfToken(agent);
   const res = await agent
     .post('/api/admin/sessions')
+    .set('x-csrf-token', csrfToken)
     .send({ name, pointsPerTeam, judgePoints })
     .expect(200);
   return res.body.session as {
@@ -58,8 +68,10 @@ export async function createTeam(
     kind = 'team',
   }: { name: string; password?: string; kind?: 'team' | 'judge' }
 ) {
+  const csrfToken = await getCsrfToken(agent);
   const res = await agent
     .post(`/api/admin/sessions/${sessionId}/teams`)
+    .set('x-csrf-token', csrfToken)
     .send({ name, password, kind })
     .expect(200);
   return res.body.team as {
@@ -77,8 +89,10 @@ export async function bulkCreateTeams(
   sessionId: number,
   count: number
 ) {
+  const csrfToken = await getCsrfToken(agent);
   const res = await agent
     .post(`/api/admin/sessions/${sessionId}/teams/bulk`)
+    .set('x-csrf-token', csrfToken)
     .send({ count })
     .expect(200);
   return res.body.teams as Array<{
@@ -101,8 +115,10 @@ export async function updateSession(
     judgePoints: number;
   }>
 ) {
+  const csrfToken = await getCsrfToken(agent);
   const res = await agent
     .patch(`/api/admin/sessions/${sessionId}`)
+    .set('x-csrf-token', csrfToken)
     .send(patch)
     .expect(200);
   return res.body.session as {
@@ -119,7 +135,12 @@ export async function updateTeam(
   teamId: number,
   patch: { name?: string; password?: string }
 ) {
-  const res = await agent.patch(`/api/admin/teams/${teamId}`).send(patch).expect(200);
+  const csrfToken = await getCsrfToken(agent);
+  const res = await agent
+    .patch(`/api/admin/teams/${teamId}`)
+    .set('x-csrf-token', csrfToken)
+    .send(patch)
+    .expect(200);
   return res.body.team as {
     id: number;
     sessionId: number;
