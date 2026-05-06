@@ -9,15 +9,18 @@ import {
 export async function clearSessions(baseURL: string) {
   const api = await playwrightRequest.newContext({ baseURL });
   try {
-    await api.post('/api/admin/login', {
+    const login = await api.post('/api/admin/login', {
       data: { adminCode: 'admin-dev-code' },
     });
+    const { csrfToken } = (await login.json()) as { csrfToken: string };
     const sessions = await api.get('/api/admin/sessions');
     const body = (await sessions.json()) as {
       sessions: Array<{ id: number }>;
     };
     for (const session of body.sessions) {
-      await api.delete(`/api/admin/sessions/${session.id}`);
+      await api.delete(`/api/admin/sessions/${session.id}`, {
+        headers: { 'x-csrf-token': csrfToken },
+      });
     }
   } finally {
     await api.dispose();

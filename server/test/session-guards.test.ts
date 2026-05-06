@@ -4,6 +4,7 @@ import {
   bulkCreateTeams,
   createSession,
   createTeam,
+  getCsrfToken,
   loginAdmin,
   loginTeam,
   newAgent,
@@ -78,13 +79,18 @@ test('enforces duplicate-team, single-commissioner, and credential-edit rules', 
 
   await admin
     .post(`/api/admin/sessions/${session.id}/teams`)
+    .set('x-csrf-token', await getCsrfToken(admin))
     .send({ name: 'Alpha', password: 'dup-pass' })
     .expect(409);
   await admin
     .post(`/api/admin/sessions/${session.id}/teams`)
+    .set('x-csrf-token', await getCsrfToken(admin))
     .send({ name: 'Commissioner 2', password: 'commissioner-2', kind: 'judge' })
     .expect(409);
-  await admin.delete(`/api/admin/teams/${commissioner.id}`).expect(409);
+  await admin
+    .delete(`/api/admin/teams/${commissioner.id}`)
+    .set('x-csrf-token', await getCsrfToken(admin))
+    .expect(409);
 
   await updateSession(admin, session.id, { status: 'open' });
   await loginTeam(newAgent(), session.id, 'Alpha', 'alpha-pass').expect(200);
@@ -131,9 +137,11 @@ test('keeps sessions isolated, rejects invalid targets, and clears votes on budg
 
   const alphaAgent = newAgent();
   await loginTeam(alphaAgent, sessionA.id, 'Alpha', 'alpha-pass').expect(200);
+  const alphaCsrfToken = await getCsrfToken(alphaAgent);
 
   await alphaAgent
     .put('/api/votes/mine')
+    .set('x-csrf-token', alphaCsrfToken)
     .send({
       allocations: [{ teamId: bravo.id, points: 5 }],
     })
@@ -141,6 +149,7 @@ test('keeps sessions isolated, rejects invalid targets, and clears votes on budg
 
   await alphaAgent
     .put('/api/votes/mine')
+    .set('x-csrf-token', alphaCsrfToken)
     .send({
       allocations: [{ teamId: delta.id, points: 5 }],
     })
@@ -185,4 +194,50 @@ test('bulk generation creates unique animal teams with passwords', async () => {
     listed.body.teams.filter((team: { kind: string }) => team.kind === 'team').length,
     6
   );
+});
+
+test('requires csrf tokens on cookie-authenticated mutations', async () => {
+  const admin = newAgent();
+  const adminLogin = await admin
+    .post('/api/admin/login')
+    .send({ adminCode: process.env.ADMIN_CODE })
+    .expect(200);
+
+  assert.equal(typeof adminLogin.body.csrfToken, 'string');
+  await admin
+    .post('/api/admin/sessions')
+    .send({ name: 'Blocked Session' })
+    .expect(403)
+    .expect(({ body }) => {
+      assert.equal(body.error, 'csrf validation failed');
+    });
+  await admin
+    .post('/api/admin/sessions')
+    .set('x-csrf-token', adminLogin.body.csrfToken)
+    .send({ name: 'Protected Session' })
+    .expect(200);
+
+  const session = await createSession(admin, { name: 'Voting Session', pointsPerTeam: 5 });
+  const alpha = await createTeam(admin, session.id, { name: 'Alpha', password: 'alpha-pass' });
+  const bravo = await createTeam(admin, session.id, { name: 'Bravo', password: 'bravo-pass' });
+  await updateSession(admin, session.id, { status: 'open' });
+
+  const team = newAgent();
+  const teamLogin = await loginTeam(team, session.id, alpha.name, 'alpha-pass').expect(200);
+  assert.equal(typeof teamLogin.body.csrfToken, 'string');
+
+  await team
+    .put('/api/votes/mine')
+    .send({ allocations: [{ teamId: bravo.id, points: 5 }] })
+    .expect(403);
+  await team
+    .put('/api/votes/mine')
+    .set('x-csrf-token', 'bad-token')
+    .send({ allocations: [{ teamId: bravo.id, points: 5 }] })
+    .expect(403);
+  await team
+    .put('/api/votes/mine')
+    .set('x-csrf-token', teamLogin.body.csrfToken)
+    .send({ allocations: [{ teamId: bravo.id, points: 5 }] })
+    .expect(200);
 });
