@@ -55,11 +55,38 @@ param registryPassword string = ''
 @description('Optional tags applied to provisioned resources.')
 param tags object = {}
 
+@description('Address space for the reusable Azure virtual network.')
+param virtualNetworkAddressPrefix string = '10.42.0.0/16'
+
+@description('CIDR prefix for the Container Apps infrastructure subnet.')
+param containerAppsInfrastructureSubnetPrefix string = '10.42.0.0/27'
+
+@description('CIDR prefix for the PostgreSQL delegated subnet.')
+param postgresSubnetPrefix string = '10.42.0.32/28'
+
+@description('Private DNS zone name for PostgreSQL private access. Must end with .postgres.database.azure.com.')
+param postgresPrivateDnsZoneName string = 'private.postgres.database.azure.com'
+
 var location = resourceGroup().location
 var commonTags = union(tags, {
   app: 'whack-a-hack'
   'managed-by': 'bicep'
 })
+var resourceSuffix = take(uniqueString(subscription().id, resourceGroup().id, workloadName), 18)
+var postgresServerName = 'psql-${resourceSuffix}'
+
+module network './modules/network.bicep' = {
+  name: 'network'
+  params: {
+    workloadName: workloadName
+    location: location
+    virtualNetworkAddressPrefix: virtualNetworkAddressPrefix
+    containerAppsInfrastructureSubnetPrefix: containerAppsInfrastructureSubnetPrefix
+    postgresSubnetPrefix: postgresSubnetPrefix
+    postgresPrivateDnsZoneName: postgresPrivateDnsZoneName
+    tags: commonTags
+  }
+}
 
 module postgres './modules/postgres.bicep' = {
   name: 'postgres'
@@ -69,6 +96,8 @@ module postgres './modules/postgres.bicep' = {
     postgresAdminLogin: postgresAdminLogin
     postgresAdminPassword: postgresAdminPassword
     databaseName: databaseName
+    delegatedSubnetResourceId: network.outputs.postgresSubnetId
+    privateDnsZoneArmResourceId: network.outputs.postgresPrivateDnsZoneId
     tags: commonTags
   }
 }
@@ -84,6 +113,7 @@ module containerApp './modules/container-app.bicep' = {
     adminCode: adminCode
     cookieSecret: cookieSecret
     databaseUrl: databaseUrl
+    infrastructureSubnetId: network.outputs.containerAppsInfrastructureSubnetId
     containerCpu: containerCpu
     containerMemory: containerMemory
     minReplicas: minReplicas
@@ -95,6 +125,33 @@ module containerApp './modules/container-app.bicep' = {
   }
 }
 
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-01-20-preview' existing = {
+  name: postgresServerName
+}
+
+resource postgresDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'postgres-to-log-analytics'
+  scope: postgresServer
+  dependsOn: [
+    postgres
+  ]
+  properties: {
+    workspaceId: containerApp.outputs.logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'PostgreSQLLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
 output locationUsed string = location
 output containerAppName string = containerApp.outputs.containerAppName
 output containerAppUrl string = containerApp.outputs.containerAppUrl
@@ -103,3 +160,5 @@ output logAnalyticsWorkspaceName string = containerApp.outputs.logAnalyticsWorks
 output postgresServerName string = postgres.outputs.postgresServerName
 output postgresHost string = postgres.outputs.postgresHost
 output postgresDatabaseName string = postgres.outputs.databaseName
+output virtualNetworkName string = network.outputs.virtualNetworkName
+output postgresPrivateDnsZoneName string = network.outputs.postgresPrivateDnsZoneName

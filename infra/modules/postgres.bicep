@@ -14,14 +14,19 @@ param postgresAdminPassword string
 @description('Application database name.')
 param databaseName string
 
+@description('Resource ID of the delegated subnet used for PostgreSQL private access.')
+param delegatedSubnetResourceId string
+
+@description('Resource ID of the private DNS zone used for PostgreSQL private access.')
+param privateDnsZoneArmResourceId string
+
 @description('Optional tags applied to provisioned resources.')
 param tags object = {}
 
 var resourceSuffix = take(uniqueString(subscription().id, resourceGroup().id, workloadName), 18)
 var postgresServerName = 'psql-${resourceSuffix}'
-var postgresHost = '${postgresServerName}.postgres.database.azure.com'
 
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-01-20-preview' = {
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   name: postgresServerName
   location: location
   tags: tags
@@ -43,10 +48,23 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-01-20-pr
     highAvailability: {
       mode: 'Disabled'
     }
+    network: {
+      delegatedSubnetResourceId: delegatedSubnetResourceId
+      privateDnsZoneArmResourceId: privateDnsZoneArmResourceId
+    }
   }
 }
 
-resource applicationDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2022-01-20-preview' = {
+resource requireSecureTransport 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2022-12-01' = {
+  parent: postgresServer
+  name: 'require_secure_transport'
+  properties: {
+    value: 'ON'
+    source: 'user-override'
+  }
+}
+
+resource applicationDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2022-12-01' = {
   parent: postgresServer
   name: databaseName
   properties: {
@@ -55,15 +73,6 @@ resource applicationDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/database
   }
 }
 
-resource allowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2022-01-20-preview' = {
-  parent: postgresServer
-  name: 'AllowAzureServices'
-  properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
-  }
-}
-
 output postgresServerName string = postgresServer.name
-output postgresHost string = postgresHost
+output postgresHost string = postgresServer.properties.fullyQualifiedDomainName
 output databaseName string = applicationDatabase.name

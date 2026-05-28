@@ -24,6 +24,7 @@ const pool = new Pool({
   connectionString: DATABASE_URL,
   ssl: createSslConfig(),
   max: 10,
+  connectionTimeoutMillis: 3000,
 });
 
 function normalizeSql(sql: string) {
@@ -178,5 +179,8 @@ export const db = {
   },
   async close() {
     await pool.end();
+  },
+  async ping() {
+    await pool.query('SELECT 1');
   },
 };

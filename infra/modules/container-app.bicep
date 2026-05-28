@@ -19,6 +19,9 @@ param cookieSecret string
 @secure()
 param databaseUrl string
 
+@description('Resource ID of the delegated subnet used by the Container Apps environment.')
+param infrastructureSubnetId string
+
 @description('CPU allocated to the app container.')
 param containerCpu string
 
@@ -73,6 +76,10 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         customerId: logAnalyticsWorkspace.properties.customerId
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
+    }
+    vnetConfiguration: {
+      infrastructureSubnetId: infrastructureSubnetId
+      internal: false
     }
   }
 }
@@ -167,7 +174,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               type: 'startup'
               httpGet: {
-                path: '/api/health'
+                path: '/api/health/ready'
                 port: 8080
               }
               initialDelaySeconds: 5
@@ -177,7 +184,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               type: 'liveness'
               httpGet: {
-                path: '/api/health'
+                path: '/api/health/live'
                 port: 8080
               }
               initialDelaySeconds: 20
@@ -187,7 +194,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               type: 'readiness'
               httpGet: {
-                path: '/api/health'
+                path: '/api/health/ready'
                 port: 8080
               }
               initialDelaySeconds: 10
@@ -209,3 +216,4 @@ output containerAppName string = containerApp.name
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output managedEnvironmentName string = managedEnvironment.name
 output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.name
+output logAnalyticsWorkspaceId string = logAnalyticsWorkspace.id

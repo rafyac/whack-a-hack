@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { api } from './routes.js';
+import { db } from './db.js';
 import {
   createApiRateLimiter,
   createAuthRateLimiter,
@@ -28,6 +29,10 @@ export function createApp(options: CreateAppOptions = {}) {
   const apiRateLimiter = createApiRateLimiter(rateLimitConfig);
   const authRateLimiter = createAuthRateLimiter(rateLimitConfig);
 
+  function sendLiveHealth(res: express.Response) {
+    res.json({ ok: true });
+  }
+
   app.use(express.json({ limit: '64kb' }));
   app.use(cookieParser());
 
@@ -41,7 +46,21 @@ export function createApp(options: CreateAppOptions = {}) {
   }
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true });
+    sendLiveHealth(res);
+  });
+  app.get('/api/health/live', (_req, res) => {
+    sendLiveHealth(res);
+  });
+  app.get('/api/health/ready', (_req, res) => {
+    void db
+      .ping()
+      .then(() => {
+        res.json({ ok: true });
+      })
+      .catch((error: unknown) => {
+        console.error('readiness check failed', error);
+        res.status(503).json({ ok: false, error: 'database unavailable' });
+      });
   });
 
   app.use('/api/auth/login', authRateLimiter);

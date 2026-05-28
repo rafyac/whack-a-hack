@@ -109,7 +109,7 @@ docker run -d --name whack-a-hack -p 8080:8080 -e ADMIN_CODE=change-me -e COOKIE
 
 If you prefer, `docker-compose.yml` is already set up as the simplest starting point for local or small self-hosted installs.
 
-If you do not want to build your own image, you can also use the public image published by this repo directly: `ghcr.io/rafyac/whack-a-hack:latest`.
+If you do not want to build your own image, you can also use the public image published by this repo directly: `ghcr.io/<owner>/<repo>:latest`.
 
 ### Azure Container Apps via Bicep
 
@@ -122,7 +122,7 @@ The repo now includes **generic Azure Bicep** under `infra/` for deploying the s
 
 Suggested flow:
 
-1. Use `ghcr.io/rafyac/whack-a-hack:latest` directly, or build and publish your own image to a registry you control.
+1. Use `ghcr.io/<owner>/<repo>:latest` directly, or build and publish your own image to a registry you control.
 2. Create or choose a resource group in the Azure subscription you want to use.
 3. Review `infra/main.parameters.example.json` and adjust the non-secret values.
 4. Deploy the stack with your own secure values:
@@ -153,6 +153,8 @@ If you use a **private** registry, also pass:
 - Set `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in your platform's env/secret configuration before first start; the image does not include a fallback admin code.
 - The server applies permissive per-IP API rate limits plus stricter failed-login throttles by default. Override `API_RATE_LIMIT_*` or `AUTH_RATE_LIMIT_*` only if your deployment needs different thresholds.
 - Use `DATABASE_SSL_MODE=require` for managed PostgreSQL services such as Azure Database for PostgreSQL Flexible Server.
+- The checked-in Azure Bicep creates a reusable private-network path for PostgreSQL: Container Apps stays externally reachable, while the database is deployed with private access, private DNS, enforced secure transport, and PostgreSQL logs plus metrics in the deployment Log Analytics workspace.
+- The template creates the VNet, delegated subnets, and PostgreSQL private DNS zone for you. Override the address prefixes in `infra/main.parameters.example.json` only if they would overlap with your existing network ranges.
 - Put the container behind your normal TLS/reverse-proxy setup if exposing it publicly.
 - Back up the PostgreSQL database as part of normal operations.
 

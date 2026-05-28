@@ -5,6 +5,9 @@ import supertest from 'supertest';
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_CODE = 'test-admin';
 process.env.COOKIE_SECRET = 'test-cookie-secret';
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/whack_a_hack_test';
+process.env.DATABASE_SSL_MODE = process.env.DATABASE_SSL_MODE || 'disable';
 
 const { createApp } = await import('../src/index.js');
 
@@ -20,6 +23,8 @@ test('health checks stay available while the general API limiter applies to othe
   const request = supertest(app);
 
   await request.get('/api/health').expect(200);
+  await request.get('/api/health/live').expect(200);
+  await request.get('/api/health/ready').expect(200);
   await request.get('/api/health').expect(200);
   await request.get('/api/health').expect(200);
 

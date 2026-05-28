@@ -14,6 +14,18 @@
     "databaseName": {
       "value": "whack_a_hack"
     },
+    "virtualNetworkAddressPrefix": {
+      "value": "10.42.0.0/16"
+    },
+    "containerAppsInfrastructureSubnetPrefix": {
+      "value": "10.42.0.0/27"
+    },
+    "postgresSubnetPrefix": {
+      "value": "10.42.0.32/28"
+    },
+    "postgresPrivateDnsZoneName": {
+      "value": "private.postgres.database.azure.com"
+    },
     "containerCpu": {
       "value": "0.5"
     },

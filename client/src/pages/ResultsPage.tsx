@@ -35,8 +35,9 @@ export default function ResultsPage() {
         } else {
           setLoading(false);
         }
-      } catch {
-        /* ignore */
+      } catch (e: any) {
+        setErr(e?.message || 'Unable to load results right now.');
+        setLoading(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,18 +79,6 @@ export default function ResultsPage() {
     </div>
   );
 
-  if (sessionId == null && !loading) {
-    return (
-      <div className="neon-card text-center max-w-xl mx-auto">
-        <Trophy className="h-10 w-10 mx-auto text-carnival-yellow mb-3" />
-        <h2 className="text-2xl font-bold mb-1">No public results yet</h2>
-        <p className="text-white/60">
-          Results appear here once an admin closes a voting session.
-        </p>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div>
@@ -107,11 +96,23 @@ export default function ResultsPage() {
         {sessionPicker}
         <div className="neon-card text-center max-w-xl mx-auto">
           <Lock className="h-10 w-10 mx-auto text-carnival-yellow mb-3" />
-          <h2 className="text-2xl font-bold mb-1">Results not available yet</h2>
+          <h2 className="text-2xl font-bold mb-1">Results are temporarily unavailable</h2>
           <p className="text-white/60">
-            Results will appear once voting is closed by the admin.
+            {err}
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (sessionId == null) {
+    return (
+      <div className="neon-card text-center max-w-xl mx-auto">
+        <Trophy className="h-10 w-10 mx-auto text-carnival-yellow mb-3" />
+        <h2 className="text-2xl font-bold mb-1">No public results yet</h2>
+        <p className="text-white/60">
+          Results appear here once an admin closes a voting session.
+        </p>
       </div>
     );
   }
