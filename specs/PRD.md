@@ -28,10 +28,12 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
 5. **Operations**
    - App runs as a single web container backed by PostgreSQL.
    - Express API traffic is rate-limited with permissive per-IP defaults, while login endpoints use stricter failed-attempt throttles.
+   - Deployment health signaling must distinguish process liveness from database readiness so the app is not treated as healthy when PostgreSQL-backed flows are unavailable.
    - Health checks and static asset delivery stay outside the API rate limit path so deployments and demos remain responsive.
    - Native local dev requires PostgreSQL plus `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in `server/.env`.
    - Containerized deployments must inject `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL`; there is no built-in admin fallback for deployed runtimes.
-   - Optional Azure Container Apps deployment artifacts may be checked into `infra/`, but must stay generic so deployers provide their own Azure context, image reference, database credentials, and secrets.
+   - The optional Azure deployment must keep the web app externally reachable while placing PostgreSQL on private-only networking with enforced secure transport, private DNS resolution, and database platform logs plus metrics in Log Analytics.
+   - Optional Azure Container Apps deployment artifacts may be checked into `infra/`, but must stay generic so deployers provide their own Azure context, image reference, credentials, secrets, and any optional network CIDR overrides without embedding tenant-specific values.
 
 ## Success criteria
 - Admin can run multiple hackathon sessions without cross-session leakage.

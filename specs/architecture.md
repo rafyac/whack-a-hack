@@ -28,6 +28,7 @@ Important implemented rules:
 - The client talks to the server over `/api`.
 - The server owns all business rules; the client mirrors rules for UX but server validation is authoritative.
 - Built client assets are served by the same Node process in deployed/containerized environments.
+- Operational health should separate process liveness from database readiness so DB-backed regressions are surfaced to the platform and UI instead of looking healthy.
 - `/api` is fronted by Express rate limiting with a separate stricter limiter for login endpoints; health checks bypass the API limiter.
 
 ## Auth and session handling
@@ -53,7 +54,7 @@ Important implemented rules:
 - Deployments must inject `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL`; no admin-code fallback is baked into the server.
 - Durable state lives in PostgreSQL rather than a mounted application volume.
 - The repo includes optional **Azure Container Apps Bicep** under `infra/` for deployers who want Azure-hosted demos without committing subscription-specific values.
-- The checked-in Azure option provisions Azure Database for PostgreSQL Flexible Server and wires the connection string into Container Apps as a secret.
+- The checked-in Azure option provisions an internet-facing Container Apps environment plus a private-network PostgreSQL Flexible Server with VNet/private DNS connectivity, enforced secure transport, PostgreSQL platform diagnostics in Log Analytics, and a secret-backed connection string for the app.
 
 ## Testing architecture
 - **Server tests**: `node:test` + `supertest` validate API contracts and business rules against a reset test database.

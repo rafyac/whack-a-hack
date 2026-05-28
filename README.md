@@ -153,6 +153,8 @@ If you use a **private** registry, also pass:
 - Set `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in your platform's env/secret configuration before first start; the image does not include a fallback admin code.
 - The server applies permissive per-IP API rate limits plus stricter failed-login throttles by default. Override `API_RATE_LIMIT_*` or `AUTH_RATE_LIMIT_*` only if your deployment needs different thresholds.
 - Use `DATABASE_SSL_MODE=require` for managed PostgreSQL services such as Azure Database for PostgreSQL Flexible Server.
+- The checked-in Azure Bicep creates a reusable private-network path for PostgreSQL: Container Apps stays externally reachable, while the database is deployed with private access, private DNS, enforced secure transport, and PostgreSQL logs plus metrics in the deployment Log Analytics workspace.
+- The template creates the VNet, delegated subnets, and PostgreSQL private DNS zone for you. Override the address prefixes in `infra/main.parameters.example.json` only if they would overlap with your existing network ranges.
 - Put the container behind your normal TLS/reverse-proxy setup if exposing it publicly.
 - Back up the PostgreSQL database as part of normal operations.
 
