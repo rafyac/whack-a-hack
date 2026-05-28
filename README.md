@@ -109,7 +109,7 @@ docker run -d --name whack-a-hack -p 8080:8080 -e ADMIN_CODE=change-me -e COOKIE
 
 If you prefer, `docker-compose.yml` is already set up as the simplest starting point for local or small self-hosted installs.
 
-If you do not want to build your own image, you can also use the public image published by this repo directly: `ghcr.io/rafyac/whack-a-hack:latest`.
+If you do not want to build your own image, you can also use the public image published by this repo directly: `ghcr.io/<owner>/<repo>:latest`.
 
 ### Azure Container Apps via Bicep
 
@@ -122,7 +122,7 @@ The repo now includes **generic Azure Bicep** under `infra/` for deploying the s
 
 Suggested flow:
 
-1. Use `ghcr.io/rafyac/whack-a-hack:latest` directly, or build and publish your own image to a registry you control.
+1. Use `ghcr.io/<owner>/<repo>:latest` directly, or build and publish your own image to a registry you control.
 2. Create or choose a resource group in the Azure subscription you want to use.
 3. Review `infra/main.parameters.example.json` and adjust the non-secret values.
 4. Deploy the stack with your own secure values:
