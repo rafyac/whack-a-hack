@@ -50,6 +50,7 @@
 - **Local container parity**: `docker compose` runs the production image plus a PostgreSQL container, using caller-supplied `ADMIN_CODE`, `COOKIE_SECRET`, and `POSTGRES_PASSWORD`.
 - **Cloud target**: single app container deployment with an external PostgreSQL database and environment-managed `ADMIN_CODE`/`COOKIE_SECRET`/`DATABASE_URL`.
 - **Azure option**: parameterized Bicep in `infra/` can deploy the app to Azure Container Apps plus Azure Database for PostgreSQL Flexible Server using a caller-supplied image reference and secure parameters, with a reusable VNet/private DNS layout, PostgreSQL private access, enforced secure transport, and PostgreSQL platform diagnostics forwarded to Log Analytics.
+- The Azure Container Apps environment explicitly uses the Consumption workload profile, supporting the default delegated `/27` infrastructure subnet without dedicated compute.
 - Deployment health signaling must distinguish process liveness from database readiness so the platform only routes traffic when PostgreSQL-backed flows are available.
 - `/api` requests use permissive per-IP throttling, while `/api/health` and built static assets remain outside the limiter path.
 
