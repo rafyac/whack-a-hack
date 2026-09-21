@@ -12,7 +12,7 @@ The default unauthenticated flow lands on the voting experience, which redirects
 
 ### Native development
 
-Requires Node 20+.
+Requires Node.js 24 LTS (also used by CI and both Docker stages).
 
 1. Install dependencies:
 
@@ -174,6 +174,30 @@ az provider register --namespace Microsoft.Network --subscription <subscription-
 > The checked-in Azure files are intentionally generic. The deployer supplies subscription, resource group, image reference, and secret values at deployment time.
 
 ## Verification
+
+### Dependency maintenance
+
+The supported dependency lines are Express 4/Zod 3 and React 18/Tailwind 3/TypeScript 5,
+with Vite 8, Vitest 4, and React Router 7. Routing remains a browser-only SPA; no SSR
+or data-router migration is required. The server explicitly selects Express 4 core
+types because `@types/csurf` otherwise accepts incompatible Express 5 types.
+
+Audit all three lockfiles, including development dependencies:
+
+```bash
+npm audit
+npm --prefix server audit
+npm --prefix client audit
+```
+
+The remaining low-severity advisory, [GHSA-pxg6-pf52-xh8x](https://github.com/advisories/GHSA-pxg6-pf52-xh8x),
+is in `csurf -> cookie@0.4.0` (npm also reports the `csurf` ancestor). The archived
+`csurf` package pins that version exactly. Its vulnerable cookie name/path/domain
+serialization inputs are not user-controlled here: the name is `csrf_session`,
+the path is `/`, and no domain is supplied. CSRF token issuance and validation
+remain enabled. Replacing the archived middleware is deferred to a separate,
+reviewed change rather than forcing an unsupported transitive version or removing
+CSRF protection.
 
 Run the existing test suite with:
 
