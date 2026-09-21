@@ -70,6 +70,12 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
   tags: tags
   properties: {
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -93,6 +99,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
   properties: {
     environmentId: managedEnvironment.id
+    workloadProfileName: 'Consumption'
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {

@@ -148,6 +148,18 @@ If you use a **private** registry, also pass:
              registryPassword=<registry-password-or-token>
 ```
 
+For a new Azure subscription, register the `Microsoft.App`, `Microsoft.Network`,
+`Microsoft.DBforPostgreSQL`, `Microsoft.OperationalInsights`, and `Microsoft.Insights`
+resource providers before deploying. If Container Apps reports
+`SubscriptionNotRegisteredForFeature` for `AllowBringYourOwnPublicIpAddress`, run:
+
+```bash
+az feature register --namespace Microsoft.Network --name AllowBringYourOwnPublicIpAddress --subscription <subscription-id>
+az feature show --namespace Microsoft.Network --name AllowBringYourOwnPublicIpAddress --subscription <subscription-id> --query properties.state
+# Once the feature state is Registered, refresh the provider and retry deployment.
+az provider register --namespace Microsoft.Network --subscription <subscription-id> --wait
+```
+
 ### Operational notes
 
 - Set `ADMIN_CODE`, `COOKIE_SECRET`, and `DATABASE_URL` in your platform's env/secret configuration before first start; the image does not include a fallback admin code.
@@ -155,6 +167,7 @@ If you use a **private** registry, also pass:
 - Use `DATABASE_SSL_MODE=require` for managed PostgreSQL services such as Azure Database for PostgreSQL Flexible Server.
 - The checked-in Azure Bicep creates a reusable private-network path for PostgreSQL: Container Apps stays externally reachable, while the database is deployed with private access, private DNS, enforced secure transport, and PostgreSQL logs plus metrics in the deployment Log Analytics workspace.
 - The template creates the VNet, delegated subnets, and PostgreSQL private DNS zone for you. Override the address prefixes in `infra/main.parameters.example.json` only if they would overlap with your existing network ranges.
+- The Container Apps environment explicitly uses the Consumption workload profile, which supports the default `/27` delegated infrastructure subnet; it does not provision dedicated compute.
 - Put the container behind your normal TLS/reverse-proxy setup if exposing it publicly.
 - Back up the PostgreSQL database as part of normal operations.
 
