@@ -67,3 +67,28 @@
   - login/results session-selection helpers
   - vote validation and session isolation
   - public leaderboard behavior
+
+## Printed Poster UI and soundtracks
+- All pages and session states use the cream/cobalt/coral Printed Poster design.
+  The sign-in page includes original decorative cabinet artwork, visible labels,
+  an actual results link, and errors that remain visible if session loading fails.
+- Ballots retain direct numeric input and labelled increment/decrement controls.
+  Remaining points, invalid totals, saving, saved, and unsaved changes are
+  distinguishable without colour. Editing is disabled while a ballot is saving.
+  A failed ballot load must not render a usable zero-budget ballot.
+- Public and admin ranking labels use competition ranks (equal totals share a
+  rank; later ranks skip tied positions), without changing API ordering or scores.
+  All tied leaders receive the same treatment; no unique winner is invented.
+- Admin session, team, commissioner, status, budget, live-results, and reset
+  controls remain available. Reset is visibly separated as a danger-zone action.
+- Soundtrack selection and volume are local UI controls. Play requires an
+  explicit user gesture; switching a playing track closes the previous audio
+  context first. Midnight Tokens has no percussion. Ocean Drive '86 includes
+  synthesised drums. No external audio files or audio dependencies are required.
+- An exclusive Web Lock plus BroadcastChannel handoff prevents simultaneous
+  same-origin players; unsupported browsers show a recoverable audio error.
+  Audio stops on hidden-page, page exit, and component disposal. No autoplay on
+  reload or when returning to a hidden tab. Errors do not block voting.
+- Regression coverage includes mobile layouts, accessible allocation, saved
+  state, tied ranks, audio opt-in/mute/switching/cleanup/exclusivity, and the
+  absence of percussion in Midnight Tokens, alongside existing API/E2E flows.

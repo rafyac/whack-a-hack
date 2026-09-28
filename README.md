@@ -4,9 +4,26 @@
 
 ## First page
 
-![Whack-A-Hack login page](specs/screenshots/first-page.jpg)
+The app uses the **Arcade Club / Printed Poster** design: cream paper,
+cobalt actions, coral accents, bold headings, and original arcade cabinet art.
+
+![Whack-A-Hack Printed Poster login page](specs/screenshots/first-page.jpg)
 
 The default unauthenticated flow lands on the voting experience, which redirects to the login page until a team or commissioner signs in.
+
+### Optional arcade mixtapes
+
+Expand **Optional arcade mixtapes** below the page content to select and play:
+- **Midnight Tokens**: original mystic '80s synths, bass, and pads, with no drums.
+- **Ocean Drive '86**: original Miami-inspired synths with drum-machine percussion.
+
+Music starts only when you press Play. Track switching stops the previous player;
+Mute, leaving the tab, and closing the page stop it. Volume is adjustable.
+Same-origin tabs coordinate exclusive playback through Web Locks and
+BroadcastChannel; audio requires a supported browser on HTTPS or localhost.
+If audio is unsupported or blocked, a message appears and voting still works.
+No remote recordings, copyrighted soundtrack, or audio downloads are used.
+Session/team data, credentials, ballots, and results always come from the API.
 
 ## Local usage
 

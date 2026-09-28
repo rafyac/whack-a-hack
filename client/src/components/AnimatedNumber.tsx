@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(value);
+  const reducedMotion = useReducedMotion();
   useEffect(() => {
+    if (reducedMotion) { setDisplay(value); return; }
     const start = display;
     const end = value;
     if (start === end) return;
@@ -19,7 +21,7 @@ export function AnimatedNumber({ value }: { value: number }) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, reducedMotion]);
   return (
     <motion.span
       key={value}
@@ -27,7 +29,7 @@ export function AnimatedNumber({ value }: { value: number }) {
       animate={{ scale: 1 }}
       className="tabular-nums"
     >
-      {display}
+      {reducedMotion ? value : display}
     </motion.span>
   );
 }

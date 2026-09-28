@@ -57,7 +57,7 @@ test('team and commissioner votes produce a discoverable public leaderboard', as
   await expect(page.getByText('Alpha')).toBeVisible();
   await expect(page.getByText('Commissioner', { exact: true })).toHaveCount(0);
 
-  const rows = page.locator('.neon-card').filter({ hasText: /pts/ });
+  const rows = page.getByTestId('result-row');
   await expect(rows.nth(0)).toContainText('Bravo');
   await expect(rows.nth(1)).toContainText('Charlie');
   await expect(rows.nth(2)).toContainText('Alpha');

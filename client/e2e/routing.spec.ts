@@ -72,5 +72,5 @@ test('restored authentication supports voting and results query deep links', asy
   await expect(page.getByText(`Final standings for ${sessionName}`, { exact: false })).toBeVisible();
   await page.reload();
   await expect(page).toHaveURL(resultsUrl);
-  await expect(page.locator('.neon-card').filter({ hasText: /pts/ }).first()).toContainText('Bravo');
+  await expect(page.getByTestId('result-row').first()).toContainText('Bravo');
 });

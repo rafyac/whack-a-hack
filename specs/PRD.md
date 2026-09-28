@@ -41,3 +41,18 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
 - Commissioner participation changes totals without appearing as a ranked hack.
 - Local and deployed environments preserve state across restarts through PostgreSQL.
 - Existing API and browser tests cover the main session, voting, and results flows.
+
+## Arcade Club presentation
+- The approved Printed Poster theme is the single app identity: cream paper,
+  cobalt actions, coral accents, bold poster headings, and original arcade artwork.
+- Sign-in prioritises the selected live session and labelled credentials. Ballots
+  clearly communicate the exact budget and saved/unsaved state. Admin retains
+  all session-management functionality in a compact control room.
+- Responsive, keyboard-accessible screens use readable contrast, visible focus,
+  text-based status indicators, and reduced-motion support.
+- Optional original music offers Midnight Tokens (mystic synths, **no drums**)
+  and Ocean Drive '86 (Miami-inspired synths and percussion). Audio never
+  autoplays and only one same-origin tab/player may play at a time.
+- The UI uses real session data; mockup data, theme comparisons, and demo
+  allocation shortcuts are not production features. No deployment is authorised
+  by this UI change.
