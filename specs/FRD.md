@@ -46,6 +46,8 @@
 - Changing a session budget invalidates prior votes for that session so new ballots match the new budget.
 
 ## Deployment and persistence
+- **Supported toolchain**: local development, CI, and both container stages use Node.js 24 LTS. Dependency maintenance preserves Express 4, Zod 3, React 18, Tailwind 3, and TypeScript 5.
+- **Client compatibility**: patched Vite 8, Vitest 4, and React Router 7 support the existing browser-only routes, session selection, authentication redirects, and voting flows; no server-side rendering or new routing behavior is introduced.
 - **Native local dev**: client and server run separately against a local PostgreSQL instance, and developers provide `ADMIN_CODE`, `COOKIE_SECRET`, `DATABASE_URL`, and optional `DATABASE_SSL_MODE` via `server/.env` before `npm run dev`.
 - **Local container parity**: `docker compose` runs the production image plus a PostgreSQL container, using caller-supplied `ADMIN_CODE`, `COOKIE_SECRET`, and `POSTGRES_PASSWORD`.
 - **Cloud target**: single app container deployment with an external PostgreSQL database and environment-managed `ADMIN_CODE`/`COOKIE_SECRET`/`DATABASE_URL`.
@@ -58,6 +60,7 @@
 - Server coverage is API-level integration testing with `node:test` and `supertest`.
 - Client coverage includes focused unit tests with `vitest` for session-selection logic.
 - Browser coverage is Playwright end-to-end testing against the built app with a PostgreSQL-backed test database.
+- Browser routing coverage includes direct links, fallback redirects, back/forward navigation, and authenticated session restoration.
 - Current test focus is critical flow coverage:
   - session setup and visibility
   - team/commissioner authentication

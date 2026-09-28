@@ -26,6 +26,7 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
     - Admin can watch live totals during an event.
     - Public leaderboard is available only when a session is closed.
 5. **Operations**
+   - Maintained dependencies and Node.js 24 LTS must preserve the current user flows and CSRF protection. Repository maintenance does not authorize deploying or replacing a running application.
    - App runs as a single web container backed by PostgreSQL.
    - Express API traffic is rate-limited with permissive per-IP defaults, while login endpoints use stricter failed-attempt throttles.
    - Deployment health signaling must distinguish process liveness from database readiness so the app is not treated as healthy when PostgreSQL-backed flows are unavailable.
