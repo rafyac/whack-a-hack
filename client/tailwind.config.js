@@ -4,12 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
+        ink: '#242623',
+        muted: '#625d50',
+        paper: '#fffaf0',
+        sand: '#eee3cb',
+        cobalt: '#2549eb',
+        coral: '#b43d29',
+        ticket: '#f3d575',
         carnival: {
-          purple: '#7C3AED',
-          pink: '#EC4899',
-          cyan: '#06B6D4',
-          lime: '#A3E635',
-          yellow: '#FACC15',
+          purple: '#2549eb',
+          pink: '#a12618',
+          cyan: '#2549eb',
+          lime: '#246038',
+          yellow: '#78520c',
           indigo: '#1E1B4B',
           deep: '#0B0A26',
         },

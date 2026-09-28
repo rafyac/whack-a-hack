@@ -136,7 +136,7 @@ export async function loginTeam(
   await picker.getByRole('button', { name: new RegExp(sessionName) }).click();
   await page.getByPlaceholder('team name').fill(teamName);
   await page.getByPlaceholder('password').fill(password);
-  await page.getByRole('button', { name: 'Enter the arena' }).click();
+  await page.getByRole('button', { name: 'Sign in to vote' }).click();
 }
 
 export async function readCommissionerPassword(page: Page) {
@@ -149,8 +149,7 @@ export async function readCommissionerPassword(page: Page) {
 
 export async function saveVote(page: Page, allocations: Record<string, number>) {
   for (const [teamName, points] of Object.entries(allocations)) {
-    const card = page.locator('.neon-card').filter({ hasText: teamName }).first();
-    await card.locator('input[type="number"]').fill(String(points));
+    await page.getByRole('spinbutton', { name: `Points for ${teamName}`, exact: true }).fill(String(points));
   }
   await page.getByRole('button', { name: 'Save vote' }).click();
   await expect(page.getByText(/Saved!/)).toBeVisible();

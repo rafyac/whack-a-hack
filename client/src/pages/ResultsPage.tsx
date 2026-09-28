@@ -6,8 +6,7 @@ import { api, type ResultRow, type Session } from '../api';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import { parseSessionId, resolveResultsSessionId } from '../sessionSelection';
 import { SessionPicker } from '../components/SessionPicker';
-
-const MEDALS = ['🥇', '🥈', '🥉'];
+import { rankResults } from '../ranking';
 
 export default function ResultsPage() {
   const [params, setParams] = useSearchParams();
@@ -83,7 +82,7 @@ export default function ResultsPage() {
     return (
       <div>
         {sessionPicker}
-        <div className="subtle-card mx-auto mt-4 max-w-3xl text-center text-white/60">
+        <div className="subtle-card mx-auto mt-4 max-w-3xl text-center text-muted">
           Loading…
         </div>
       </div>
@@ -94,10 +93,10 @@ export default function ResultsPage() {
     return (
       <div>
         {sessionPicker}
-        <div className="neon-card text-center max-w-xl mx-auto">
+        <div className="poster-card text-center max-w-xl mx-auto">
           <Lock className="h-10 w-10 mx-auto text-carnival-yellow mb-3" />
           <h2 className="text-2xl font-bold mb-1">Results are temporarily unavailable</h2>
-          <p className="text-white/60">
+          <p className="text-muted">
             {err}
           </p>
         </div>
@@ -107,10 +106,10 @@ export default function ResultsPage() {
 
   if (sessionId == null) {
     return (
-      <div className="neon-card text-center max-w-xl mx-auto">
+      <div className="poster-card text-center max-w-xl mx-auto">
         <Trophy className="h-10 w-10 mx-auto text-carnival-yellow mb-3" />
         <h2 className="text-2xl font-bold mb-1">No public results yet</h2>
-        <p className="text-white/60">
+        <p className="text-muted">
           Results appear here once an admin closes a voting session.
         </p>
       </div>
@@ -118,20 +117,21 @@ export default function ResultsPage() {
   }
 
   const max = Math.max(1, ...(rows || []).map((r) => r.total));
+  const ranked = rankResults(rows ?? []);
 
   return (
     <div className="space-y-6">
       {sessionPicker}
-      <div className="neon-card mx-auto max-w-3xl text-center">
+      <div className="poster-card mx-auto max-w-3xl text-center">
         <div className="section-kicker mx-auto">Public results</div>
-        <div className="mb-2 mt-4 text-5xl">🏁</div>
-        <h1 className="bg-gradient-to-r from-carnival-pink via-carnival-yellow to-carnival-cyan bg-clip-text text-4xl font-bold text-transparent">
+        <Trophy aria-hidden="true" className="mx-auto my-4 h-10 w-10 text-coral" />
+        <h1 className="poster-title page-title">
           Final Leaderboard
         </h1>
-        <p className="mt-3 text-white/60">
+        <p className="mt-3 text-muted">
           {activeSession
-            ? `Final standings for ${activeSession.name} in Whack-A-Hack. Compare the sessions and see who came out on top.`
-            : 'The crowd has spoken. Compare the sessions and see who came out on top in Whack-A-Hack.'}
+            ? `Final standings for ${activeSession.name}. Totals include team and commissioner points.`
+            : 'Final standings. Totals include team and commissioner points.'}
         </p>
       </div>
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -139,49 +139,51 @@ export default function ResultsPage() {
           <div className="section-kicker">Leaderboard</div>
           <h2 className="text-2xl font-display font-bold">How the teams finished</h2>
         </div>
-        <div className="text-sm text-white/45">
+        <div className="text-sm text-muted">
           {(rows || []).length} ranked {(rows || []).length === 1 ? 'team' : 'teams'}
         </div>
       </div>
       <div className="space-y-3">
-        {(rows || []).map((r, i) => (
+        {ranked.map((r, i) => (
           <motion.div
             key={r.id}
             layout
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.04 }}
-            className="neon-card"
+            className="poster-card result-row"
+            data-testid="result-row"
+            data-leader={r.rank === 1}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl w-8 text-center">
-                  {MEDALS[i] ?? <span className="text-white/40 text-base">#{i + 1}</span>}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="text-2xl w-8 shrink-0 text-center">
+                  <span className="font-mono text-base">#{r.rank}</span>
                 </span>
-                <div>
+                <div className="min-w-0">
                   <div className="text-xl font-semibold">{r.name}</div>
-                  <div className="text-sm text-white/45">
-                    {i === 0 ? 'Current crowd favourite' : `Place #${i + 1}`}
+                  <div className="result-muted text-sm text-muted">
+                    {r.tied ? `Joint place #${r.rank}` : r.rank === 1 ? 'Winning team' : `Place #${r.rank}`}
                   </div>
                 </div>
               </div>
-              <div className="text-2xl font-display font-bold text-carnival-yellow">
+              <div className="shrink-0 text-2xl font-mono font-bold">
                 <AnimatedNumber value={r.total} />
-                <span className="text-white/40 text-sm font-sans"> pts</span>
+                <span className="result-muted text-sm font-sans"> pts</span>
               </div>
             </div>
-            <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden">
+            <div className="result-bar" aria-hidden="true">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${(r.total / max) * 100}%` }}
                 transition={{ duration: 0.7, delay: i * 0.04 }}
-                className="h-full bg-gradient-to-r from-carnival-pink via-carnival-purple to-carnival-cyan"
+                className="h-full bg-coral"
               />
             </div>
           </motion.div>
         ))}
         {(rows || []).length === 0 && (
-          <div className="neon-card text-center text-white/60">
+          <div className="poster-card text-center text-muted">
             <Trophy className="h-8 w-8 mx-auto mb-2 text-carnival-yellow" />
             No results yet.
           </div>
