@@ -42,9 +42,11 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
 - Local and deployed environments preserve state across restarts through PostgreSQL.
 - Existing API and browser tests cover the main session, voting, and results flows.
 
-## Arcade Club presentation
-- The approved Printed Poster theme is the single app identity: cream paper,
-  cobalt actions, coral accents, bold poster headings, and original arcade artwork.
+## After Hours presentation
+- The approved After Hours theme replaces Printed Poster as the single app
+  identity: charcoal/petrol surfaces, warm orange actions, cream type, original
+  pixel-art rooftops, and analog cassette details. The lobby is cinematic;
+  voting, results and administration prioritise readable, restrained controls.
 - Sign-in prioritises the selected live session and labelled credentials. Ballots
   clearly communicate the exact budget and saved/unsaved state. Admin retains
   all session-management functionality in a compact control room.
@@ -53,6 +55,16 @@ Whack-A-Hack is a hackathon voting app where an admin runs multiple independent 
 - Optional original music offers Midnight Tokens (mystic synths, **no drums**)
   and Ocean Drive '86 (Miami-inspired synths and percussion). Audio never
   autoplays and only one same-origin tab/player may play at a time.
+- The cassette deck presents the two existing original soundtracks with
+  animated reels, explicit playback/mute and volume controls, without autoplay.
+- An optional hidden Tape Run game is revealed with Insert coin. It includes
+  rooftop gaps, short automatically climbed stairs, two jumps per landing,
+  cassette collectibles and occasional vents at a relaxed fixed pace.
+- Gameplay is local and ephemeral, never sends scores or alters ballots, and
+  pauses when hidden, closed or navigating to another page. It remains optional
+  and does not interfere with credentials, ballot controls or keyboard focus.
 - The UI uses real session data; mockup data, theme comparisons, and demo
-  allocation shortcuts are not production features. No deployment is authorised
-  by this UI change.
+  allocation shortcuts are not production features. The September 29 approval
+  authorises the full redesign, cassette deck and game, followed by a reviewed
+  PR and deployment after CI passes. Backend/security and infrastructure
+  behavior remain unchanged.

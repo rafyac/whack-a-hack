@@ -34,12 +34,13 @@ export function uniqueSession(name: string) {
 export async function adminLogin(page: Page) {
   await page.goto('/admin');
   const sessionsButton = page.getByRole('button', { name: 'Sessions' });
-  if (await sessionsButton.isVisible().catch(() => false)) {
+  const adminCodeInput = page.getByPlaceholder('admin code');
+  await expect(sessionsButton.or(adminCodeInput)).toBeVisible();
+  if (await sessionsButton.isVisible()) {
     await expect(sessionsButton).toBeVisible();
     return;
   }
 
-  const adminCodeInput = page.getByPlaceholder('admin code');
   await expect(adminCodeInput).toBeVisible();
   await adminCodeInput.fill('admin-dev-code');
   await page.getByRole('button', { name: 'Unlock' }).click();

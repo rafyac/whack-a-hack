@@ -3,7 +3,7 @@ import { addTeam, adminLogin, clearSessions, closeVoting, createSession, loginTe
 
 test.beforeEach(async ({ baseURL }) => { await clearSessions(baseURL!); });
 
-test('mobile poster supports labelled allocations, save state and tied leaders', async ({ page }) => {
+test('mobile After Hours supports labelled allocations, save state and tied leaders', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const sessionName = uniqueSession('Mobile Poster');
