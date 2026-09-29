@@ -68,9 +68,9 @@
   - vote validation and session isolation
   - public leaderboard behavior
 
-## Printed Poster UI and soundtracks
-- All pages and session states use the cream/cobalt/coral Printed Poster design.
-  The sign-in page includes original decorative cabinet artwork, visible labels,
+## After Hours UI and soundtracks
+- All pages and session states use the charcoal/petrol/orange After Hours design.
+  The sign-in page includes original decorative rooftop artwork, visible labels,
   an actual results link, and errors that remain visible if session loading fails.
 - Ballots retain direct numeric input and labelled increment/decrement controls.
   Remaining points, invalid totals, saving, saved, and unsaved changes are
@@ -92,3 +92,32 @@
 - Regression coverage includes mobile layouts, accessible allocation, saved
   state, tied ranks, audio opt-in/mute/switching/cleanup/exclusivity, and the
   absence of percussion in Midnight Tokens, alongside existing API/E2E flows.
+- The cassette deck retains the existing audio controller and exclusive playback
+  rules, with paper tape labels, selected-track indication, decorative reels and
+  a mute control. Reels do not animate when stopped or with reduced motion.
+
+## Optional Tape Run
+- Insert coin reveals a below-content horizontal canvas game without starting
+  it. Start run is explicit; controls include keyboard Space/Up (jump), P
+  (pause/resume), Escape (close), and labelled touch buttons.
+- Authored repeatable rooftop sections mix gaps, stairs, collectible tapes and
+  occasional vents. Stairs climb automatically. Two distinct jump presses
+  enable a double jump; held-key repeat must not consume the second jump.
+  Landing recharges both jumps; walking off an edge leaves one recovery jump.
+- Short gaps can be crossed with a well-timed single jump; longer gaps require
+  the second boost. Missed landings end the run and allow an immediate restart.
+  Show distance, collected tapes, boosts remaining, instructions and game state.
+- Use a responsive playfield, bounded generated terrain and fixed small physics
+  steps. Start/resume timing uses animation-frame timestamps consistently:
+  the first frame advances zero time and frame deltas cannot be negative.
+- Pause on page hiding, game closing or route change; do not resume automatically.
+  Dispose animation callbacks/listeners on unmount. Keyboard shortcuts apply
+  only inside the focused game, never in login/admin/ballot inputs.
+- No game API, storage, accounts, dependencies, borrowed art/music, random
+  impossible courses, flashing effects or autoplay. Reduced-motion users
+  still explicitly opt into gameplay. Canvas failure shows a recoverable
+  game-only message and never blocks the rest of the app.
+- Unit coverage proves double-jump limits, recharge, stairs, gaps, collision,
+  bounded traversable sections and pause behavior. Browser coverage exercises
+  delayed first-frame timestamps, restart/resume, keyboard repeat, touch
+  controls, visibility/navigation cleanup and narrow layouts.

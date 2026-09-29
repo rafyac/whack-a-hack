@@ -8,7 +8,7 @@ import {
   getLoginSessions,
 } from '../sessionSelection';
 import { SessionPicker } from '../components/SessionPicker';
-import { ArcadeCabinet } from '../components/ArcadeCabinet';
+import { RooftopArt } from '../components/RooftopArt';
 
 export default function LoginPage() {
   const [sessions, setSessions] = useState<Session[] | null>(null);
@@ -52,19 +52,20 @@ export default function LoginPage() {
   const openSessions = getLoginSessions(sessions ?? []);
 
   return (
-    <div className="join-layout">
+    <div className="join-layout after-hours-hero">
+      <RooftopArt />
       <section className="space-y-5">
         <div className="section-kicker">The after-hours hackers club</div>
         <div className="space-y-4">
           <h1 className="poster-title join-title">
-            Small teams.<br /><span className="text-cobalt">Big swings.</span>
+            After<br /><span className="text-cobalt">Hours.</span>
           </h1>
           <p className="section-copy max-w-sm">
-            The demos are done. The night is yours.<br />
-            Give your points to the ideas you love.
+            The best ideas don't clock out.<br />
+            Back the thing you wish you'd built.
           </p>
         </div>
-        <ArcadeCabinet />
+        <div className="after-hours-tagline">SMALL TEAMS. BIG SWINGS. LATE NIGHTS.<br />ONE TEAM. ONE BALLOT.</div>
       </section>
       <motion.div
         initial={{ scale: 0.96, opacity: 0 }}
@@ -72,7 +73,7 @@ export default function LoginPage() {
         className="poster-card w-full lg:justify-self-end"
       >
         <div className="admit-label"><span>Player check-in</span><span>Admit one team</span></div>
-        <h2 className="mb-2 text-3xl font-bold">You're up, player.</h2>
+        <h2 className="mb-2 text-3xl font-bold">Find your frequency.</h2>
         <p className="mb-6 text-muted">Choose your session and sign in to vote.</p>
         {error && <div role="alert" className="feedback-banner feedback-error mb-4">{error}</div>}
 

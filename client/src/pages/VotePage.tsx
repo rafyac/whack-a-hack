@@ -104,7 +104,7 @@ export default function VotePage() {
         particleCount: 70,
         spread: 80,
         origin: { y: 0.7 },
-        colors: ['#2549eb', '#b43d29', '#f3d575'],
+        colors: ['#f48150', '#84b6af', '#e8e0cc'],
         disableForReducedMotion: true,
       });
     } catch (e: any) {

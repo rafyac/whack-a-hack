@@ -30,19 +30,28 @@ export function MusicPlayer() {
     if (state.playing) void controller.current?.play(track);
   }
   return (
-    <details className="music-panel">
-      <summary>Optional arcade mixtapes {state.playing ? '/ Playing' : '/ Sound off'}</summary>
-      <div className="mixtapes" role="group" aria-label="Soundtrack">
+    <section className="music-panel" aria-label="Optional cassette soundtracks">
+      <div className="deck-heading"><span>W/H PORTABLE STEREO</span><span>TYPE II / ORIGINAL MUSIC</span></div>
+      <div className="deck-body">
+        <div className="cassette" data-playing={Boolean(state.playing)} aria-hidden="true">
+          <div className="tape-label">
+            <div className="tape-title">{tracks[selected].name}</div>
+            <div className="tape-sub">SIDE {selected === 'midnight' ? 'A' : 'B'} / {tracks[selected].bpm} BPM</div>
+            <div className="tape-reels"><i /><i /></div>
+          </div>
+          <span className="side-label">C-60 / STEREO</span>
+        </div>
+        <div className="mixtapes" role="group" aria-label="Soundtrack">
         {(Object.keys(tracks) as TrackId[]).map(track => (
           <button type="button" key={track} className={`mixtape ${track}`} aria-pressed={selected === track}
             disabled={state.busy} onClick={() => select(track)}>
-            <span className="cassette" aria-hidden="true"><i /><i /></span>
-            <span className="min-w-0"><strong className="block">{tracks[track].name}</strong>
+            <span className="min-w-0"><span className="block font-mono text-xs text-muted">SIDE {track === 'midnight' ? 'A' : 'B'}</span><strong className="block text-sm">{tracks[track].name}</strong>
               <span className="mt-1 block text-xs text-muted">{tracks[track].description}</span>
               <span className="mt-1 block font-mono text-xs text-muted">{tracks[track].bpm} BPM / Original</span>
             </span>
           </button>
         ))}
+        </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <button className="btn-ghost" disabled={state.busy} onClick={() => {
@@ -60,6 +69,6 @@ export function MusicPlayer() {
           {state.playing ? `Playing: ${tracks[state.playing].name}` : state.message || 'Sound off.'}
         </p>
       </div>
-    </details>
+    </section>
   );
 }

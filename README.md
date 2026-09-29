@@ -4,16 +4,17 @@
 
 ## First page
 
-The app uses the **Arcade Club / Printed Poster** design: cream paper,
-cobalt actions, coral accents, bold headings, and original arcade cabinet art.
+The app uses the **After Hours** design: charcoal and petrol-blue surfaces,
+warm orange actions, cream lettering, original pixel-art rooftops, and an analog
+cassette deck. Voting and admin screens stay focused on real session data.
 
-![Whack-A-Hack Printed Poster login page](specs/screenshots/first-page.jpg)
+![Whack-A-Hack After Hours login page](specs/screenshots/first-page.jpg)
 
 The default unauthenticated flow lands on the voting experience, which redirects to the login page until a team or commissioner signs in.
 
-### Optional arcade mixtapes
+### Optional cassette soundtracks
 
-Expand **Optional arcade mixtapes** below the page content to select and play:
+Use the **W/H Portable Stereo** deck below the page content to select and play:
 - **Midnight Tokens**: original mystic '80s synths, bass, and pads, with no drums.
 - **Ocean Drive '86**: original Miami-inspired synths with drum-machine percussion.
 
@@ -24,6 +25,20 @@ BroadcastChannel; audio requires a supported browser on HTTPS or localhost.
 If audio is unsupported or blocked, a message appears and voting still works.
 No remote recordings, copyrighted soundtrack, or audio downloads are used.
 Session/team data, credentials, ballots, and results always come from the API.
+
+### Hidden Tape Run
+
+Press **Insert coin** near the footer, then **Start run**, to play the optional
+rooftop runner. Stairs climb automatically; jump across gaps, clear vents, and
+follow the cassette trails. Press **Space**, **Up**, or **Jump** (or tap the
+playfield); press again in mid-air for a double jump. Landing restores both
+boosts. **P** pauses/resumes and **Escape** closes the game.
+
+Gameplay is local and ephemeral: it has no API, score storage, or effect on
+votes. It pauses when the tab is hidden, the game is closed, or the route changes,
+and never resumes automatically. Keyboard controls only apply to the focused
+playfield. Reduced-motion preferences disable decorative reel/parallax effects;
+the game itself starts only on request. Artwork and music are original.
 
 ## Local usage
 

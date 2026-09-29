@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 async function openMusic(page: Page) {
   await page.goto('/login');
-  await page.getByText('Optional arcade mixtapes', { exact: false }).click();
+  await expect(page.getByRole('region', { name: 'Optional cassette soundtracks' })).toBeVisible();
   // Do not play audible music on a developer's workstation.
   await page.getByRole('slider', { name: 'Volume' }).fill('0');
 }
