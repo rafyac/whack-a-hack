@@ -47,6 +47,8 @@
 
 ## Deployment and persistence
 - **Supported toolchain**: local development, CI, and both container stages use Node.js 24 LTS. Dependency maintenance preserves Express 4, Zod 3, React 18, Tailwind 3, and TypeScript 5.
+- The CI verification job uses Ubuntu 24.04 so Playwright browser dependencies
+  remain supported rather than following changes to `ubuntu-latest`.
 - **Client compatibility**: patched Vite 8, Vitest 4, and React Router 7 support the existing browser-only routes, session selection, authentication redirects, and voting flows; no server-side rendering or new routing behavior is introduced.
 - **Native local dev**: client and server run separately against a local PostgreSQL instance, and developers provide `ADMIN_CODE`, `COOKIE_SECRET`, `DATABASE_URL`, and optional `DATABASE_SSL_MODE` via `server/.env` before `npm run dev`.
 - **Local container parity**: `docker compose` runs the production image plus a PostgreSQL container, using caller-supplied `ADMIN_CODE`, `COOKIE_SECRET`, and `POSTGRES_PASSWORD`.
@@ -81,7 +83,10 @@
   the disabled Save button is visibly distinct from an enabled one.
 - The public results empty state links to sign-in. On narrow screens the admin
   tab bar scrolls horizontally in one row and the Teams roster appears before
-  the add/generate forms.
+  the add/generate forms. The roster precedes commissioner and team setup in
+  both DOM and visual order at every viewport size so keyboard navigation follows
+  the layout. Team-management feedback remains beside setup controls and is
+  brought into view and focused when it changes, including with a long roster.
 - Public and admin ranking labels use competition ranks (equal totals share a
   rank; later ranks skip tied positions), without changing API ordering or scores.
   All tied leaders receive the same treatment; no unique winner is invented.
