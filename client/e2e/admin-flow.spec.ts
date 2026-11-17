@@ -53,3 +53,54 @@ test('admin can log out back to the login gate', async ({ page }) => {
   await adminLogout(page);
   await expect(page.getByRole('button', { name: 'Sessions' })).not.toBeVisible();
 });
+
+for (const width of [390, 1280]) {
+  test(`team roster follows keyboard order and feedback stays visible at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await adminLogin(page);
+    await createSession(page, { name: uniqueSession('Roster accessibility') });
+    await bulkGenerateTeams(page, 18);
+
+    const success = page.getByRole('status').filter({ hasText: 'Generated 18 animal-themed teams.' });
+    await expect(success).toBeFocused();
+    await expect(success).toBeInViewport({ ratio: 1 });
+
+    const picker = page.getByTestId('admin-active-session-picker').getByRole('button');
+    await picker.focus();
+    await page.keyboard.press('Tab');
+    const firstTeam = page.getByRole('listitem').first();
+    await expect(firstTeam.getByTitle('Show', { exact: true })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(firstTeam.getByTitle('Copy password')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(firstTeam.getByTitle('Edit', { exact: true })).toBeFocused();
+
+    const roster = page.getByRole('heading', { name: /teams \(18\)/ });
+    const commissioner = page.getByTestId('commissioner-credentials');
+    const rosterBounds = await roster.boundingBox();
+    const commissionerBounds = await commissioner.boundingBox();
+    expect(rosterBounds!.y).toBeLessThan(commissionerBounds!.y);
+
+    await page.route(/\/api\/admin\/sessions\/\d+\/teams(?:\/bulk)?$/, async (route) => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 400,
+        json: { error: 'Team creation failed. Please try again.' },
+      });
+    });
+
+    await page.getByRole('textbox', { name: 'Team name', exact: true }).fill('Another team');
+    for (const action of ['Add', 'Generate']) {
+      await page.getByRole('button', { name: action, exact: true }).click();
+      const error = page.getByRole('alert');
+      await expect(error).toHaveText('Team creation failed. Please try again.');
+      await expect(error).toBeFocused();
+      await expect(error).toBeInViewport({ ratio: 1 });
+    }
+  });
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy, Lock } from 'lucide-react';
 import { api, type ResultRow, type Session } from '../api';
@@ -112,6 +112,7 @@ export default function ResultsPage() {
         <p className="text-muted">
           Results appear here once an admin closes a voting session.
         </p>
+        <Link className="btn-primary mt-4" to="/login">Go to sign in</Link>
       </div>
     );
   }

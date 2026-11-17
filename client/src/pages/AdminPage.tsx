@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Copy,
@@ -437,6 +437,14 @@ function TeamsTab({ session }: { session: Session }) {
   const [editing, setEditing] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editPassword, setEditPassword] = useState('');
+  const feedbackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (err || notice) {
+      feedbackRef.current?.scrollIntoView({ block: 'nearest' });
+      feedbackRef.current?.focus({ preventScroll: true });
+    }
+  }, [err, notice]);
 
   const commissioner = teams.find((team) => team.kind === 'judge') ?? null;
   const regularTeams = teams.filter((team) => team.kind === 'team');
@@ -492,12 +500,12 @@ function TeamsTab({ session }: { session: Session }) {
         session.id,
         bulkCount
       );
+      await refresh();
       setNotice(
         `${session.name}: Generated ${created.length} animal-themed ${
           created.length === 1 ? 'team' : 'teams'
         }.`
       );
-      await refresh();
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -546,8 +554,8 @@ function TeamsTab({ session }: { session: Session }) {
         name: COMMISSIONER_NAME,
         kind: 'judge',
       });
-      setNotice('Commissioner account created for this older session.');
       await refresh();
+      setNotice('Commissioner account created for this older session.');
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -555,8 +563,8 @@ function TeamsTab({ session }: { session: Session }) {
     }
   }
 
-  return (
-    <div className="space-y-4">
+  const setupControls = (
+    <>
       <div className="poster-card flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
           <div className="text-xs uppercase tracking-widest text-muted">
@@ -750,9 +758,21 @@ function TeamsTab({ session }: { session: Session }) {
           <Users className="h-4 w-4" /> Generate
         </button>
       </form>
-      {err && <div className="feedback-banner feedback-error">{err}</div>}
-      {notice && <div className="feedback-banner feedback-success">{notice}</div>}
+      {(err || notice) && (
+        <div
+          ref={feedbackRef}
+          tabIndex={-1}
+          role={err ? 'alert' : 'status'}
+          className={`feedback-banner ${err ? 'feedback-error' : 'feedback-success'}`}
+        >
+          {err ?? notice}
+        </div>
+      )}
+    </>
+  );
 
+  return (
+    <div className="flex flex-col gap-4">
       <div className="poster-card">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-3">
@@ -872,6 +892,7 @@ function TeamsTab({ session }: { session: Session }) {
           </ul>
         )}
       </div>
+      {setupControls}
     </div>
   );
 }

@@ -185,9 +185,9 @@ export default function VotePage() {
         className="poster-card ballot-summary"
       >
         <div>
-          <div className="section-kicker">Points remaining</div>
+          <div className="section-kicker max-sm:sr-only">Points remaining</div>
           <div
-            className={`text-5xl font-display font-bold tabular-nums ${
+            className={`text-3xl sm:text-5xl font-display font-bold tabular-nums ${
               remaining === 0
                 ? 'text-carnival-lime'
                 : remaining < 0
@@ -198,11 +198,6 @@ export default function VotePage() {
             <AnimatedNumber value={remaining} />
             <span className="text-muted text-2xl"> / {budget}</span>
           </div>
-          <div className="mt-2 text-sm text-muted" role="status" aria-live="polite">
-            {remaining < 0 ? `Remove ${-remaining} points before saving.` : remaining > 0
-              ? `${remaining} points left to allocate.` : 'All points allocated.'}
-            {' '}{saving ? 'Saving...' : saved ? 'Ballot saved.' : 'Unsaved changes.'}
-          </div>
         </div>
         <button
           className="btn-primary"
@@ -212,6 +207,12 @@ export default function VotePage() {
           <Save className="h-5 w-5" />
           {saving ? 'Saving…' : 'Save vote'}
         </button>
+        <div className="basis-full text-sm text-muted" role="status" aria-live="polite">
+          {remaining < 0 ? `Remove ${-remaining} points before saving.` : remaining > 0
+            ? `${remaining} points left to allocate.` : 'All points allocated.'}
+          {' '}{saving ? 'Saving...' : saved ? 'Ballot saved.' : 'Unsaved changes.'}
+          {remaining !== 0 && ` Allocate exactly ${budget} points to save.`}
+        </div>
       </motion.div>
 
       {msg && (
