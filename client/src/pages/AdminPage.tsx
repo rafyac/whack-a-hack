@@ -556,7 +556,7 @@ function TeamsTab({ session }: { session: Session }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="poster-card flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
           <div className="text-xs uppercase tracking-widest text-muted">
@@ -750,10 +750,10 @@ function TeamsTab({ session }: { session: Session }) {
           <Users className="h-4 w-4" /> Generate
         </button>
       </form>
-      {err && <div className="feedback-banner feedback-error">{err}</div>}
-      {notice && <div className="feedback-banner feedback-success">{notice}</div>}
+      {err && <div className="feedback-banner feedback-error order-first md:order-none">{err}</div>}
+      {notice && <div className="feedback-banner feedback-success order-first md:order-none">{notice}</div>}
 
-      <div className="poster-card">
+      <div className="poster-card order-first md:order-none">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-3">
             <div className="section-kicker">Teams roster</div>

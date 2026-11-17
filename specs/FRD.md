@@ -76,6 +76,12 @@
   Remaining points, invalid totals, saving, saved, and unsaved changes are
   distinguishable without colour. Editing is disabled while a ballot is saving.
   A failed ballot load must not render a usable zero-budget ballot.
+  On narrow screens the pinned ballot summary stays compact so team rows remain
+  visible; while the total is not exact, a hint states the required total and
+  the disabled Save button is visibly distinct from an enabled one.
+- The public results empty state links to sign-in. On narrow screens the admin
+  tab bar scrolls horizontally in one row and the Teams roster appears before
+  the add/generate forms.
 - Public and admin ranking labels use competition ranks (equal totals share a
   rank; later ranks skip tied positions), without changing API ordering or scores.
   All tied leaders receive the same treatment; no unique winner is invented.
