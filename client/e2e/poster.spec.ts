@@ -16,6 +16,7 @@ test('mobile After Hours supports labelled allocations, save state and tied lead
   await page.getByRole('button', { name: 'Add one point to Bravo', exact: true }).click();
   await expect(page.getByRole('spinbutton', { name: 'Points for Bravo', exact: true })).toHaveValue('1');
   await expect(page.getByRole('button', { name: 'Save vote' })).toBeDisabled();
+  await expect(page.getByText('Allocate exactly 6 points to save.')).toBeVisible();
   await saveVote(page, { Bravo: 3, Charlie: 3 });
   await page.reload();
   await expect(page.getByText('Ballot saved.', { exact: false })).toBeVisible();
