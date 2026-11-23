@@ -77,19 +77,22 @@ test('enforces duplicate-team, single-commissioner, and credential-edit rules', 
   ) as { id: number; name: string };
   assert.equal(commissioner.name, 'Commissioner');
 
+  let csrfToken = await getCsrfToken(admin);
   await admin
     .post(`/api/admin/sessions/${session.id}/teams`)
-    .set('x-csrf-token', await getCsrfToken(admin))
+    .set('x-csrf-token', csrfToken)
     .send({ name: 'Alpha', password: 'dup-pass' })
     .expect(409);
+  csrfToken = await getCsrfToken(admin);
   await admin
     .post(`/api/admin/sessions/${session.id}/teams`)
-    .set('x-csrf-token', await getCsrfToken(admin))
+    .set('x-csrf-token', csrfToken)
     .send({ name: 'Commissioner 2', password: 'commissioner-2', kind: 'judge' })
     .expect(409);
+  csrfToken = await getCsrfToken(admin);
   await admin
     .delete(`/api/admin/teams/${commissioner.id}`)
-    .set('x-csrf-token', await getCsrfToken(admin))
+    .set('x-csrf-token', csrfToken)
     .expect(409);
 
   await updateSession(admin, session.id, { status: 'open' });
